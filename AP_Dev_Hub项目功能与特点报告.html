@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP_Dev_Hub 项目功能与特点报告</title>
+<style>
+  :root{
+    --green:#86BC25; --green-dark:#5C8A13; --green-soft:#EAF3DC;
+    --ink:#1B1F23; --ink-2:#3C444C; --ink-3:#66727D;
+    --line:#E3E7EA; --bg:#F6F7F9; --card:#FFFFFF;
+    --blue:#2E6FB7; --blue-soft:#E8F0F9;
+    --amber:#C77700; --amber-soft:#FBF0DC;
+    --purple:#6B4FBB; --purple-soft:#EEEAF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI","Hiragino Sans GB",sans-serif;
+    font-size:14px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px 80px;}
+
+  /* ---------- 封面 ---------- */
+  header.hero{
+    background:linear-gradient(135deg,#1B1F23 0%,#2C3A2E 55%,#3E5230 100%);
+    color:#fff; padding:52px 0 44px; margin-bottom:32px;
+    border-bottom:4px solid var(--green);
+  }
+  header.hero .wrap{padding-bottom:0;}
+  .eyebrow{font-size:12px; letter-spacing:.18em; color:var(--green); font-weight:700; margin-bottom:12px;}
+  header.hero h1{margin:0 0 14px; font-size:32px; line-height:1.35; font-weight:700; letter-spacing:.01em;}
+  header.hero p.lead{margin:0; font-size:15px; color:#C9D2C4; max-width:820px;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px;}
+  .meta span{
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18);
+    padding:5px 13px; border-radius:100px; font-size:12px; color:#DCE3D8;
+  }
+
+  /* ---------- 通用 ---------- */
+  section{margin-bottom:40px;}
+  h2{
+    font-size:21px; margin:0 0 6px; padding-left:13px;
+    border-left:4px solid var(--green); line-height:1.3;
+  }
+  h2 .en{font-size:12px; color:var(--ink-3); font-weight:400; margin-left:10px; letter-spacing:.05em;}
+  .sub{color:var(--ink-3); font-size:13px; margin:0 0 20px; padding-left:17px;}
+  h3{font-size:16px; margin:26px 0 12px; color:var(--ink);}
+  h3 .tag{
+    display:inline-block; font-size:11px; font-weight:700; padding:2px 9px;
+    border-radius:4px; margin-left:8px; vertical-align:2px; letter-spacing:.03em;
+  }
+  .t-green{background:var(--green-soft); color:var(--green-dark);}
+  .t-blue{background:var(--blue-soft); color:var(--blue);}
+  .t-purple{background:var(--purple-soft); color:var(--purple);}
+  .t-amber{background:var(--amber-soft); color:var(--amber);}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px 22px;}
+  .grid{display:grid; gap:16px;}
+  .g2{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+
+  /* ---------- 数字卡 ---------- */
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 16px; text-align:center;}
+  .stat .num{font-size:28px; font-weight:700; color:var(--green-dark); line-height:1.2; font-family:"Segoe UI",sans-serif;}
+  .stat .lbl{font-size:12px; color:var(--ink-3); margin-top:4px;}
+
+  /* ---------- 产品线卡 ---------- */
+  .line-card{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .line-card .hd{padding:14px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px;}
+  .line-card .hd .dot{width:10px; height:10px; border-radius:50%; flex:none;}
+  .line-card .hd h4{margin:0; font-size:15px;}
+  .line-card .hd .repos{margin-left:auto; font-size:11px; color:var(--ink-3); font-family:Consolas,monospace;}
+  .line-card .bd{padding:16px 20px 18px;}
+  .line-card .bd p{margin:0 0 10px; font-size:13px; color:var(--ink-2);}
+  .chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{background:#F1F3F5; border:1px solid var(--line); border-radius:5px; padding:3px 9px; font-size:12px; color:var(--ink-2);}
+
+  /* ---------- 表格 ---------- */
+  table{width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:13px;}
+  th{background:#F0F2F4; text-align:left; padding:10px 14px; font-weight:700; color:var(--ink-2); border-bottom:1px solid var(--line); white-space:nowrap;}
+  td{padding:10px 14px; border-bottom:1px solid #EFF1F3; vertical-align:top; color:var(--ink-2);}
+  tr:last-child td{border-bottom:none;}
+  td.k{font-weight:600; color:var(--ink); white-space:nowrap;}
+  code{font-family:Consolas,"Courier New",monospace; font-size:12px; background:#F1F3F5; padding:1px 5px; border-radius:3px; color:#B03A48;}
+
+  /* ---------- 功能清单 ---------- */
+  .fn{border-left:3px solid var(--line); padding:2px 0 2px 16px; margin-bottom:14px;}
+  .fn b{display:block; font-size:13.5px; color:var(--ink); margin-bottom:2px;}
+  .fn span{font-size:12.5px; color:var(--ink-3);}
+
+  /* ---------- 特点卡 ---------- */
+  .feat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; position:relative;}
+  .feat .no{
+    position:absolute; top:16px; right:18px; font-size:24px; font-weight:800;
+    color:#EDEFF1; font-family:"Segoe UI",sans-serif; line-height:1;
+  }
+  .feat h4{margin:0 0 8px; font-size:15px; padding-right:34px;}
+  .feat p{margin:0; font-size:13px; color:var(--ink-2);}
+
+  /* ---------- 分层架构 ---------- */
+  .layer{display:flex; align-items:stretch; gap:0; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:10px;}
+  .layer .lt{flex:none; width:132px; padding:14px 16px; font-weight:700; font-size:13px; color:#fff; display:flex; align-items:center;}
+  .layer .lc{padding:12px 18px; font-size:12.5px; color:var(--ink-2); display:flex; align-items:center; flex-wrap:wrap; gap:8px;}
+  .l1 .lt{background:#2C3A2E;} .l2 .lt{background:#3E5C2A;} .l3 .lt{background:var(--green-dark);}
+  .l4 .lt{background:#2E6FB7;} .l5 .lt{background:#5A6472;}
+  .pill{background:#F1F3F5; border:1px solid var(--line); border-radius:100px; padding:2px 10px; font-size:12px;}
+  .pill.mono{font-family:Consolas,monospace; font-size:11.5px;}
+
+  ul.clean{margin:8px 0 0; padding-left:20px; font-size:13px; color:var(--ink-2);}
+  ul.clean li{margin-bottom:5px;}
+  .note{background:#FFFBF0; border:1px solid #F0E2C0; border-radius:8px; padding:14px 18px; font-size:13px; color:#6B5518;}
+  .note b{color:#8A6A00;}
+  footer{border-top:1px solid var(--line); padding-top:18px; font-size:12px; color:var(--ink-3);}
+
+  @media print{
+    body{background:#fff;} header.hero{background:#1B1F23 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .layer .lt{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    section{page-break-inside:avoid;}
+  }
+  @media(max-width:900px){ .g2,.g3,.g4{grid-template-columns:1fr;} .layer{flex-direction:column;} .layer .lt{width:auto;} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">DELoitte IDDC · AP DEV HUB</div>
+    <h1>AP_Dev_Hub 项目功能与特点报告</h1>
+    <p class="lead">
+      不是单一项目，而是同一研发部门下 <strong>8 个独立 Git 仓库</strong> 组成的代码资产集合，
+      覆盖 <strong>3 条产品线</strong>：AI Agent 工作台、勤栈 d.orbit 企业级低代码平台、设计与 POC 资产。
+      本报告聚焦「已实现什么功能」与「有哪些特点」，不含安全审计内容。
+    </p>
+    <div class="meta">
+      <span>报告日期：2026-09-02</span>
+      <span>分析范围：8 个 Git 仓库</span>
+      <span>GitLab 组：internal_projects/ap_dev_hub</span>
+      <span>主要贡献者：jameszhan</span>
+      <span>方法：源码与配置静态分析</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 一、规模 ============ -->
+<section>
+  <h2>一、整体规模<span class="en">SCALE</span></h2>
+  <p class="sub">数据来自各仓库 Git 元数据与源码统计。</p>
+  <div class="grid g4">
+    <div class="stat"><div class="num">8</div><div class="lbl">独立 Git 仓库</div></div>
+    <div class="stat"><div class="num">6,778</div><div class="lbl">受版本控制文件</div></div>
+    <div class="stat"><div class="num">143</div><div class="lbl">Java Controller 接口模块</div></div>
+    <div class="stat"><div class="num">141</div><div class="lbl">HTML 交互原型</div></div>
+    <div class="stat"><div class="num">19</div><div class="lbl">Spring Boot Starter</div></div>
+    <div class="stat"><div class="num">3</div><div class="lbl">条并行产品线</div></div>
+    <div class="stat"><div class="num">309</div><div class="lbl">累计提交</div></div>
+    <div class="stat"><div class="num">4</div><div class="lbl">套前端实现</div></div>
+  </div>
+</section>
+
+<!-- ============ 二、三条产品线 ============ -->
+<section>
+  <h2>二、三条产品线<span class="en">PRODUCT LINES</span></h2>
+  <p class="sub">三条线互不依赖，各自独立演进；设计与 POC 线为前两条提供产品形态验证。</p>
+  <div class="grid g3">
+    <div class="line-card">
+      <div class="hd"><span class="dot" style="background:var(--green);"></span><h4>A · AI Agent 工作台</h4><span class="repos">2 仓</span></div>
+      <div class="bd">
+        <p>面向终端用户的智能工作空间：用自然语言完成数据分析、文件处理与内容生成。</p>
+        <div class="chips">
+          <span class="chip">对话式 Agent</span><span class="chip">工作区/项目</span>
+          <span class="chip">文件树</span><span class="chip">Skill 市场</span>
+          <span class="chip">沙箱执行</span><span class="chip">实时流式</span>
+        </div>
+      </div>
+    </div>
+    <div class="line-card">
+      <div class="hd"><span class="dot" style="background:var(--blue);"></span><h4>B · 勤栈 d.orbit 平台</h4><span class="repos">3 仓</span></div>
+      <div class="bd">
+        <p>面向企业管理的 Java 微服务体系：RBAC、工作流、低代码、主数据与 AI 能力平台。</p>
+        <div class="chips">
+          <span class="chip">多租户 RBAC</span><span class="chip">Flowable 工作流</span>
+          <span class="chip">低代码表单</span><span class="chip">主数据 + SAP</span>
+          <span class="chip">知识库</span><span class="chip">AI 生成设计</span>
+        </div>
+      </div>
+    </div>
+    <div class="line-card">
+      <div class="hd"><span class="dot" style="background:var(--purple);"></span><h4>C · 设计与 POC 资产</h4><span class="repos">3 仓</span></div>
+      <div class="bd">
+        <p>产品形态的探索与展示层：交互原型、设计规范、POC 门户与税务技能库。</p>
+        <div class="chips">
+          <span class="chip">141 个原型</span><span class="chip">设计规范 11 章</span>
+          <span class="chip">POC 导航门户</span><span class="chip">技能库</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 三、分层架构 ============ -->
+<section>
+  <h2>三、能力分层<span class="en">LAYERED VIEW</span></h2>
+  <p class="sub">从用户触达到基础设施，共五层。注意：AI 能力在第三层有<strong>两套并行实现</strong>。</p>
+
+  <div class="layer l1"><div class="lt">访问层</div><div class="lc">
+    <span class="pill">终端用户</span><span class="pill">管理员 / 运营</span><span class="pill">POC 访客</span><span class="pill">产品与研发</span>
+  </div></div>
+
+  <div class="layer l2"><div class="lt">前端层</div><div class="lc">
+    <span class="pill mono">ui/ap_agent_ui</span> Vue3 + Vite Agent 客户端（部署 /dorbit/agent/）
+    <span class="pill mono">ui/ap_admin_ui</span> JeeLowCode 二开管理端（/dorbit/admin）
+    <span class="pill mono">api/ap_agent/frontend</span> Alpine.js 零构建单页
+    <span class="pill mono">design/*</span> 静态展示站
+  </div></div>
+
+  <div class="layer l3"><div class="lt">服务层</div><div class="lc">
+    <span class="pill mono">api/ap_agent</span> FastAPI + Claude Agent SDK + 沙箱
+    <span class="pill mono">dorbit-gateway</span> 统一网关（/dorbit-api/）
+    <span class="pill mono">service_base</span> 系统/基础设施/BPM/低代码
+    <span class="pill mono">service_mdm</span> 主数据 + 财务 + SAP 同步
+    <span class="pill mono">service_ai</span> AI 平台（封装 Dify）
+  </div></div>
+
+  <div class="layer l4"><div class="lt">框架层</div><div class="lc">
+    <span class="pill mono">dorbit-dependencies</span> BOM 版本仲裁
+    <span class="pill mono">dorbit-framework</span> 19 个 starter
+    <span class="pill mono">dorbit-module-sdks</span> system / infra / bpm RPC SDK
+  </div></div>
+
+  <div class="layer l5"><div class="lt">数据与设施</div><div class="lc">
+    <span class="pill">MySQL</span><span class="pill">MongoDB</span><span class="pill">Redis / Redisson</span>
+    <span class="pill">RocketMQ</span><span class="pill">Nacos</span><span class="pill">MinIO</span>
+    <span class="pill">向量库</span><span class="pill">DB2（MDM 方言）</span><span class="pill">Docker / gVisor 沙箱</span>
+  </div></div>
+</section>
+
+<!-- ============ 四、功能清单 A ============ -->
+<section>
+  <h2>四、产品线 A｜AI Agent 工作台功能清单<span class="en">AGENT WORKSPACE</span></h2>
+  <p class="sub">这是当前最活跃的一条线。后端 <code>api/ap_agent</code>（13 个 API 模块 / 18 个 Service），前端有 Vue3 与 Alpine.js 两套。</p>
+
+  <h3>4.1 后端能力 <span class="tag t-green">api/ap_agent</span></h3>
+  <div class="card">
+    <div class="fn"><b>双模式对话引擎</b><span>
+      <strong>Direct Chat</strong>：直接调用 LLM 流式输出（读取最近约 20 条上下文 → SSE 逐 token 推送 → 落库）。
+      <strong>Agent Chat</strong>：创建 AgentRun → 准备 workspace/.memory → 调用 Claude Agent SDK 执行 → 工具调用 → 持久化 ToolCall / Reference / 消息。</span></div>
+    <div class="fn"><b>Agent 工具链与子 Agent 委派</b><span>
+      工具集 Read / Write / Edit / Bash / Glob / Grep / WebSearch，配套工具权限回调；
+      <code>subagents.json</code> 定义子 Agent，支持任务拆解与委派。</span></div>
+    <div class="fn"><b>四级工作空间模型</b><span>
+      Workspace → Project → Folder → File，对应 workspaces / projects / folders / files 四组 API，
+      支持项目树导航、目录管理与文件增删改查。</span></div>
+    <div class="fn"><b>产出物（Artifact）与引用（Reference）</b><span>
+      Agent 执行过程产生的文件由 <code>file_watcher.py</code> 自动捕获为产出物；Reference 记录 Agent 引用过的来源，可溯源。</span></div>
+    <div class="fn"><b>Skill 双轨体系</b><span>
+      <code>myskill_service</code> 管理个人/工作区技能，<code>skill_registry_service</code> 提供技能注册中心：
+      发布、版本管理、权限控制、安装。</span></div>
+    <div class="fn"><b>三层沙箱执行</b><span>
+      Local Shell（Windows 开发）/ Docker（Linux 生产）/ gVisor（高安全），
+      由 <code>sandbox_executor.py</code> + <code>docker_shell_backend.py</code> 统一调度，<code>tools/security.py</code> 做命令安全检查。</span></div>
+    <div class="fn"><b>实时交互机制</b><span>
+      SSE 推送 message / tool / todo / artifact / file-tree / done / error 七类事件；
+      支持 AskUserQuestion——Agent 中途挂起向用户追问，用户回答后继续执行。</span></div>
+    <div class="fn"><b>文件预览与项目虚拟站点</b><span>
+      <code>file_preview_service</code> + <code>preview.py</code>：project_id 即站点标识，可直接预览 Agent 产出的网页/文档。</span></div>
+    <div class="fn"><b>认证与数据同步</b><span>
+      <code>auth_service</code>（JWT + AAD）、<code>disk_sync_service</code> 保持磁盘与数据库状态一致。</span></div>
+  </div>
+
+  <h3>4.2 Vue3 客户端 <span class="tag t-blue">ui/ap_agent_ui</span></h3>
+  <div class="card">
+    <div class="fn"><b>对话工作区</b><span>
+      ChatInput / ChatMessages / MessageItem / ToolCallBlock / WelcomeContent —— 流式消息渲染、Markdown 渲染缓存、
+      工具调用过程可视化（ToolCallBlock）、文件选择器（FileTreePicker）。</span></div>
+    <div class="fn"><b>三栏 + 预览布局</b><span>
+      SidebarLeft（Workspace / Project 树）· MainContent（对话）· SidebarRight · PreviewContent · TopNavigation，
+      配合 FilePreview / FilePreviewModal 做文件预览。</span></div>
+    <div class="fn"><b>Skill 市场</b><span>
+      SkillListView 浏览 → SkillDetailView 详情 → PublishView 发布 → SkillReviewView 审核 → WorkspaceSkillView 工作区技能；
+      配套 InstallDialog 安装、PublishDialog 发布、SkillVersionSelector 版本选择、PermissionBadge 权限标识、TagFilter 标签筛选、SearchBar 搜索。</span></div>
+    <div class="fn"><b>团队协作</b><span>
+      TeamManagement / TeamMemberPanel —— 团队成员管理与协作界面。</span></div>
+    <div class="fn"><b>实时通道与状态管理</b><span>
+      Socket.IO（<code>useSocketStore</code>）+ SSE 双通道；Pinia 分域管理：
+      Chat / Project / ProjectWorkspace / Workspace / Skill / Team / AgentApp 共 7 个 Store。</span></div>
+  </div>
+
+  <h3>4.3 零构建前端 <span class="tag t-purple">api/ap_agent/frontend</span></h3>
+  <div class="card">
+    <p style="margin:0 0 10px;font-size:13px;color:var(--ink-2);">
+      仅 <strong>9 个文件</strong>（index.html + 2 CSS + 6 JS），用 CDN 引入 Alpine.js 与 marked，
+      无 npm、无构建步骤，后端单进程即可提供完整界面 —— 这是「轻量内嵌」路线的实现。
+    </p>
+    <div class="chips">
+      <span class="chip">Alpine.js 响应式</span><span class="chip">Markdown 渲染</span>
+      <span class="chip">stores.js 状态</span><span class="chip">api.js 接口封装</span>
+      <span class="chip">零构建部署</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 五、功能清单 B ============ -->
+<section>
+  <h2>五、产品线 B｜勤栈 d.orbit 平台功能清单<span class="en">ENTERPRISE PLATFORM</span></h2>
+  <p class="sub">Java 21 + Spring Boot 3.3.1 + Spring Cloud Alibaba，共 143 个 Controller，分三个独立 Maven 聚合工程。</p>
+
+  <h3>5.1 service_base — 平台底座 <span class="tag t-blue">80 个 Controller</span></h3>
+  <div class="card">
+    <table>
+      <tr><th style="width:130px;">模块</th><th style="width:56px;">数量</th><th>功能</th></tr>
+      <tr><td class="k">system</td><td>35</td><td>用户、角色、菜单、部门、岗位、用户组、<strong>租户与租户套餐</strong>、OAuth2（客户端/用户/令牌/开放接口）、数据字典、行政区域、站内通知与模板、短信（渠道/模板/日志/回调）、邮件（账号/模板/日志）、操作日志、登录日志、验证码、应用与应用组、国际化、权限</td></tr>
+      <tr><td class="k">infra</td><td>15</td><td>文件与文件配置（对象存储）、数据源配置、<strong>代码生成 Codegen</strong>、数据库文档、API 访问日志、API 错误日志、Redis 监控、系统配置、业务模型（BizModel / BizProperty / BizSchema / BizView / BizRule）</td></tr>
+      <tr><td class="k">bpm</td><td>12</td><td>Flowable 工作流：流程分类、流程表单、流程模型、流程定义、流程表达式、流程监听器、<strong>流程实例与任务</strong>、用户组、OA 请假示例、DMN 决策表测试</td></tr>
+      <tr><td class="k">dcode</td><td>18</td><td>低代码核心：设计表单 DesForm、数据表单 DbForm 与表单数据、报表 Report / ReportData、按钮、标签页 Tab、业务规则、表单增强、历史版本、分组、国际化、Excel、适配器、<strong>Open API 与 API 日志</strong></td></tr>
+    </table>
+  </div>
+
+  <h3>5.2 service_mdm — 主数据与财务编排 <span class="tag t-amber">38 个 Controller</span></h3>
+  <div class="card">
+    <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2);">
+      面向财务共享场景的主数据中心，覆盖 <strong>组织、核算、税务、交易、资产</strong> 五大域，并提供 SAP 主数据同步能力。
+    </p>
+    <table>
+      <tr><th style="width:120px;">域</th><th>主数据对象</th></tr>
+      <tr><td class="k">组织</td><td>Company 公司 · Dept 部门 · Position 岗位 · Users 用户 · UserGroup / UserGroupDept / UserGroupRel 用户组体系 · CityData 城市</td></tr>
+      <tr><td class="k">核算</td><td>CostCenter 成本中心 · ProfitCenter 利润中心 · WBS · ProjectAccounting 项目核算 · AccountingKemu 会计科目 · RelatedTaxKemu 关联税科目 · PostingKey 过账码 · SpecialGlIndicator 特别总账标识 · FundingBudgetIndicators 资金预算指标 · ExpensePlan 费用计划</td></tr>
+      <tr><td class="k">税务</td><td>TaxCode 税码 · InvoiceType 发票类型 · VoucherType 凭证类型 · Currency 币种 · ExchangeRate 汇率 · CostCurrencyRel 成本币种关系</td></tr>
+      <tr><td class="k">交易</td><td>Customer 客户 · Vendor 供应商 · BankAccount 银行账户 · Order 订单 · ReceivePayMethod 收付款方式 · PayReason 付款事由 · CashFlowReasonCode 现金流原因码</td></tr>
+      <tr><td class="k">资产 / 其他</td><td>AssetCategory 资产分类（含关联关系）· DeviceType 设备类型 · ProductLine 产品线 · TravelStandards 差旅标准 · AirlineClass 舱位 · <strong>SapMasterDataSync SAP 主数据同步</strong></td></tr>
+    </table>
+  </div>
+
+  <h3>5.3 service_ai — AI 能力平台 <span class="tag t-green">25 个 Controller</span></h3>
+  <div class="card">
+    <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2);">
+      核心是<strong>封装 Dify</strong>（对接内部 <code>http://10.201.219.36/v1</code>），在此之上构建企业级 AI 资产管理与生成能力。
+    </p>
+    <table>
+      <tr><th style="width:130px;">能力组</th><th>控制器</th></tr>
+      <tr><td class="k">模型与凭据</td><td>AiModel 模型管理 · AiApiKey API Key 管理</td></tr>
+      <tr><td class="k">Agent 与工具</td><td>Agent · AiTool 工具 · Skill 技能 · Schedule 定时任务</td></tr>
+      <tr><td class="k">知识库 RAG</td><td>AiKnowledge 知识库 · AiKnowledgeDocument 文档 · AiKnowledgeSegment 切片</td></tr>
+      <tr><td class="k">对话</td><td>AiChatConversation / AiChatMessage / AiChatRole · Conversation · Messages · SendMessage</td></tr>
+      <tr><td class="k">生成式设计</td><td><strong>UiDesign / UiDsl</strong> 界面设计生成 · <strong>DatabaseDesignTemplate / Ezdml / SQLParse / OopDsl</strong> 数据库设计生成 · DslDesign / DslDesignTemplate DSL 设计</td></tr>
+      <tr><td class="k">内容生成</td><td>AiWrite AI 写作</td></tr>
+    </table>
+    <p style="margin:14px 0 0;font-size:12.5px;color:var(--ink-3);">
+      注：<code>dorbit-module-ai-ser-skill</code> 模块存在于 sql 目录但未列入父 pom 的 <code>&lt;modules&gt;</code>，当前不参与构建。
+    </p>
+  </div>
+
+  <h3>5.4 框架与前端 <span class="tag t-purple">framework + admin_ui</span></h3>
+  <div class="grid g2">
+    <div class="card">
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-2);">
+        <strong>ap_dorbit_framework</strong>：BOM 版本仲裁（<code>3.2.3-standard</code>）+ 19 个 starter
+        —— web / security / mybatis / redis / rpc / mq / file / excel / tenant / monitor / protection / test / banner，
+        以及 dict / notice / operatelog / sms / smtp 等业务公共能力；对外提供 system-api / infra-api / bpm-api 三个 RPC SDK。
+      </p>
+    </div>
+    <div class="card">
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink-2);">
+        <strong>ap_admin_ui</strong>：基于 JeeLowCode 二次开发，8 个顶层模块（业务设计 <code>/lowdev</code>、设计模板、运行任务、系统管理、基础设施、系统监控、集成中心、<strong>AI 中台 <code>/ai-dev</code></strong>）。
+        自研部分集中在 <code>src/views/ai-dnova/</code>：Agent（表单 / 列表 / 分类 / 仓库）、DSL 设计器、任务管理（会话列表 / 消息列表）。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 六、功能清单 C ============ -->
+<section>
+  <h2>六、产品线 C｜设计与 POC 资产<span class="en">DESIGN &amp; POC</span></h2>
+  <div class="card">
+    <div class="fn"><b>ap_agent_poc — 产品原型库（151 文件）</b><span>
+      141 个 HTML 原型（无 .rp/.fig 源文件留存），分基础版 / 完善版 / 完善版-V1 / POC 开发版 / agent-harness / BA 设计（婷婷、永凤）六组；
+      配套《Cowork 产品通用设计规范》11 章，涵盖信息架构、协作 UX、权限模型、AI 集成、视觉系统。
+      原型业务场景取自真实项目：<strong>丰田汽车 FY25/FY26 税务决算申报、AI 税务申报 POC、Top200 资产分析</strong>。</span></div>
+    <div class="fn"><b>ap_poc_center — POC 展示门户（21 文件）</b><span>
+      Vue3 + Tailwind 静态站，聚合 12 个 POC 入口：AP Top 200 AI Report、分析师工作台、Self Service、Shared Reports、AI Tax Assistant、
+      SRM 采购管理平台、AI 软件开发协作平台、AI 工作助手、AP Skills Platform、会计引擎系统、财务共享平台等。
+      是<strong>部署时的门户壳</strong>——多数链接指向同级挂载的子站，本地直接打开为死链。</span></div>
+    <div class="fn"><b>ap_skills — 税务 AI 技能库（31 文件）</b><span>
+      <code>skills/</code> 遵循标准 Agent Skill 规范（YAML frontmatter + Markdown + scripts/）：唯一落地技能为
+      <strong>top200/tier-percentage-chart</strong>（按 Tier 生成资产占比折线图，pandas + matplotlib + openpyxl）；
+      <code>portal/</code> 是德勤深绿主题展示站，展示 13 个技能（base / flow / region 三类）+ 6 个设计文档。
+      与 ap_agent_poc 中的技能原型页面一一对应：<strong>原型是交互，portal 是定义与门户</strong>。</span></div>
+  </div>
+</section>
+
+<!-- ============ 七、产品特点 ============ -->
+<section>
+  <h2>七、产品特点<span class="en">PRODUCT CHARACTERISTICS</span></h2>
+  <p class="sub">这套资产最值得关注的 8 个特点——既是优势，也定义了它当前的形态。</p>
+  <div class="grid g2">
+    <div class="feat"><div class="no">01</div><h4>双 AI 引擎并行</h4><p>AI 能力有<strong>两套完全独立的实现</strong>：Python 侧用 Claude Agent SDK（ap_agent），Java 侧封装 Dify（service_ai）。二者语言、存储、前端、模型供应商全部不同，功能高度重叠。这是当前最需要团队拍板的架构问题。</p></div>
+    <div class="feat"><div class="no">02</div><h4>POC 驱动的产品演进</h4><p>先有 141 个可交互 HTML 原型验证形态，再逐步生产化。原型 → 前端 → 服务的链路可追溯，产品设计意图保留完整（含 BA 各自版本），这在内部研发资产中较为少见。</p></div>
+    <div class="feat"><div class="no">03</div><h4>真实业务场景锚定</h4><p>不是技术演示：原型与技能均围绕<strong>丰田汽车税务决算申报、Top200 资产分析、财务共享</strong>等真实项目构建，主数据中心覆盖完整的会计核算科目体系（过账码、特别总账标识、税码、WBS）。</p></div>
+    <div class="feat"><div class="no">04</div><h4>AI 覆盖软件开发全链路</h4><p>Java 侧 service_ai 提供 UI 设计生成（UiDsl）、数据库设计生成（Ezdml / SQLParse / OopDsl）、DSL 设计；前端侧 Agent UI 可生成原型、需求分析 Story Map、BPMN 流程、产品路线图。意图是把 AI 用在<strong>开发过程本身</strong>。</p></div>
+    <div class="feat"><div class="no">05</div><h4>低代码 + AI 融合</h4><p>平台底座自带完整低代码能力（表单设计器、数据表单、报表、业务规则、代码生成 Codegen、Open API），AI 中台作为独立模块嵌入同一套 RBAC / 租户体系，而非外挂系统。</p></div>
+    <div class="feat"><div class="no">06</div><h4>Agent 沙箱三层隔离</h4><p>Local Shell（开发）/ Docker（生产）/ gVisor（高安全）三档可切换，配合命令安全校验与文件监听自动捕获产出物——把「让 Agent 动手」这件事做了工程化约束。</p></div>
+    <div class="feat"><div class="no">07</div><h4>Skill 资产化运营</h4><p>技能被当作<strong>可发布、可版本化、可授权、可安装</strong>的资产管理：注册中心 + 市场 + 审核 + 权限徽章 + 版本选择器，前端实现了完整的市场闭环。规范上采用标准 Agent Skill（SKILL.md + scripts）。</p></div>
+    <div class="feat"><div class="no">08</div><h4>企业级治理能力齐备</h4><p>多租户 + 租户套餐、OAuth2 全套、操作/登录/API 访问/错误日志四套审计、数据字典与国际化、Nacos 注册与配置中心、Flowable 工作流与 DMN 决策表——平台底座接近开箱即用的企业管理框架。</p></div>
+  </div>
+</section>
+
+<!-- ============ 八、技术特点 ============ -->
+<section>
+  <h2>八、技术特点<span class="en">TECHNICAL CHARACTERISTICS</span></h2>
+  <div class="grid g3">
+    <div class="card">
+      <h3 style="margin-top:0;">后端双栈</h3>
+      <ul class="clean">
+        <li><strong>Python</strong>：FastAPI + Uvicorn + SQLAlchemy 2.0 异步 + aiomysql + MySQL 8</li>
+        <li><strong>Java</strong>：Java 21 + Spring Boot 3.3.1 + Spring Cloud Alibaba + MyBatis-Plus</li>
+        <li>RPC 分工：service_base 用 Dubbo，service_mdm 用 OpenFeign</li>
+        <li>两套栈通过网关 /dorbit-api/ 与 /dorbit/agent/ 路径分离</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">前端四套</h3>
+      <ul class="clean">
+        <li>Vue 3.5 + Vite 5 + TS + Element Plus（Agent UI）</li>
+        <li>Vue 3.4 + Vite 5 + <strong>avue 3.7.1</strong> + vxe-table（管理端）</li>
+        <li>Alpine.js CDN 零构建单页（ap_agent 内嵌）</li>
+        <li>Vue3 + Tailwind CDN 静态站（两个门户）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">实时与流式</h3>
+      <ul class="clean">
+        <li>SSE 为主：7 类事件（message / tool / todo / artifact / file-tree / done / error）</li>
+        <li>Socket.IO 辅助通道（useSocketStore）</li>
+        <li>Agent 中途追问：AskUserQuestion 挂起 / 恢复</li>
+        <li>Markdown 渲染缓存（useMarkdownRenderCache）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">数据与中间件</h3>
+      <ul class="clean">
+        <li>MySQL（harness_* 14 表 / ai_* 11 表 / base 68 表含 QRTZ_*）</li>
+        <li>MongoDB、Redis + Redisson、RocketMQ</li>
+        <li>MinIO 对象存储、向量数据库（RAG）</li>
+        <li>DB2 方言脚本（MDM）、EasyExcel 导入导出</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">部署形态</h3>
+      <ul class="clean">
+        <li>Python 侧：Docker Compose 单容器</li>
+        <li>Java 侧：Nacos 注册 + 配置，Gateway 统一入口</li>
+        <li>环境：dev / sit 指向 iddcpet{dev,sit}.deloitte.com.cn</li>
+        <li>路径约定：/dorbit-api/ · /dorbit/admin · /dorbit/agent/</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">工程与质量</h3>
+      <ul class="clean">
+        <li>7 个 .gitlab-ci.yml：仅 verify + sonar 两阶段</li>
+        <li>前端有 vue-tsc --noEmit 与 ESLint，无稳定单测/E2E</li>
+        <li>Java POM 声明 Java 21，CI 使用 JDK 17（不一致）</li>
+        <li>架构依赖单 worker：事件、锁、会话状态均在进程内</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 九、待确认 ============ -->
+<section>
+  <h2>九、三个待团队确认的问题<span class="en">OPEN QUESTIONS</span></h2>
+  <div class="note">
+    <p style="margin:0 0 10px;"><b>1. 哪套 AI 链路是现行版本？</b><br>
+    <code>ap_agent</code> 的 Alpine.js 前端与 <code>ap_agent_ui</code> 的 Vue3 前端，两者 VERSION.md 逐字相同（v1.1.0 / 2026-08-24 / 相同 changelog），但功能重叠。同时 Claude Agent SDK 与 Dify 封装长期并存。需要明确主链路，否则双份维护成本。</p>
+    <p style="margin:0 0 10px;"><b>2. 展示态 ≠ 实现态。</b><br>
+    ap_skills 门户展示 13 个技能，<code>skills/</code> 中可执行的只有 1 个；ap_poc_center 的多数链接依赖部署时同级挂载。对外汇报时应区分「已实现」与「原型展示」。</p>
+    <p style="margin:0;"><b>3. 上线前的安全与工程门禁。</b><br>
+    明文凭据、Docker socket 直挂、资源归属授权、CI 跳过测试等问题已在《AP_Dev_Hub全景分析报告》中单列，本报告不展开。当前状态更适合「安全止血 + 收敛」，而非继续扩展功能。</p>
+  </div>
+</section>
+
+<footer>
+  本报告基于 8 个仓库的源码、配置与 Git 元数据静态分析生成（2026-09-02）。未执行依赖安装、构建、运行或自动化测试，功能可用性以实际部署环境为准。
+  安全与质量审计详见 <code>AP_Dev_Hub全景分析报告.md</code>，仓库地图与阅读顺序详见 <code>PROJECT_ANALYSIS.md</code>。
+</footer>
+
+</div>
+</body>
+</html>

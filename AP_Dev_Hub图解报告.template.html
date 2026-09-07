@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP_Dev_Hub 全景图解报告</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #1f2933;
+    --muted: #616e7c;
+    --accent: #0b6e4f;
+    --accent2: #1a56db;
+    --warn: #b45309;
+    --border: #e1e5ea;
+    --code-bg: #f0f3f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+  header.hero {
+    background: linear-gradient(135deg, #0b3d2e 0%, #0b6e4f 55%, #1a56db 130%);
+    color: #fff;
+    padding: 42px 32px 36px;
+  }
+  header.hero .tag {
+    display: inline-block;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.35);
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: .5px;
+    margin-bottom: 14px;
+  }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; }
+  header.hero p { margin: 4px 0; opacity: .92; max-width: 900px; }
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 30px;
+    margin: 26px 0;
+    box-shadow: 0 1px 3px rgba(16,24,40,.05);
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    border-left: 5px solid var(--accent);
+    padding-left: 12px;
+  }
+  h3 { margin: 26px 0 10px; font-size: 17px; color: var(--accent2); }
+  p.lead { color: var(--muted); margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  code {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: .92em;
+  }
+  pre.code {
+    background: #101923; color: #d7e0ea;
+    border-radius: 10px; padding: 16px 18px; overflow-x: auto;
+    font-size: 13px; line-height: 1.55;
+  }
+  pre.code .comment { color: #7d8ea0; }
+  .mermaid-wrap {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fcfdfe;
+    padding: 18px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .diagram-caption { font-size: 13px; color: var(--muted); margin: 6px 0 0; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .stat-card {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-card b { font-size: 24px; color: var(--accent); display: block; }
+  .callout {
+    border-radius: 10px; padding: 14px 18px; margin: 14px 0;
+    border-left: 4px solid var(--accent2); background: #f2f6ff;
+  }
+  .callout.warn { border-left-color: var(--warn); background: #fff8f0; }
+  .callout.risk { border-left-color: #c62828; background: #fdf1f1; }
+  .callout b { display: block; margin-bottom: 4px; }
+  nav.toc {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 26px; margin: 26px 0;
+  }
+  nav.toc a { color: var(--accent2); text-decoration: none; display: inline-block; margin: 3px 14px 3px 0; }
+  nav.toc a:hover { text-decoration: underline; }
+  .pill { display:inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight:600; }
+  .pill.py { background:#e8f5e9; color:#2e7d32; }
+  .pill.vue { background:#e8f0fe; color:#1a56db; }
+  .pill.java { background:#fde8e8; color:#b91c1c; }
+  .pill.h5 { background:#f3e8ff; color:#7c3aed; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding: 30px 0 20px; }
+  .badge { display:inline-block; background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:12px; margin:1px 2px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="tag">Deloitte IDDC · AP Dev Hub · 代码资产全景</span>
+  <h1>AP_Dev_Hub 项目全景图解报告</h1>
+  <p>8 个独立 Git 仓库 · 3 条产品线 · 约 6,800 个受版本控制文件 · 同一 GitLab 组</p>
+  <p style="font-size:14px;">本报告基于仓库实际文件与 Git 元数据核对生成，全部流程图离线可渲染（Mermaid v11 已内联）。</p>
+</header>
+
+<main>
+
+<nav class="toc">
+  <b>目录</b><br>
+  <a href="#s0">0. 一句话定位</a>
+  <a href="#s1">1. 仓库全景总览</a>
+  <a href="#s2">2. 产品线 A · AI Agent 主线</a>
+  <a href="#s3">3. 产品线 B · 勤栈 d.orbit</a>
+  <a href="#s4">4. 产品线 C · 设计与 POC</a>
+  <a href="#s5">5. 仓库间依赖关系</a>
+  <a href="#s6">6. 两条 AI 链路对比</a>
+  <a href="#s7">7. 风险与建议</a>
+  <a href="#s8">8. 上手阅读顺序</a>
+</nav>
+
+<!-- ============ 0 ============ -->
+<section class="card" id="s0">
+  <h2>0. 一句话定位</h2>
+  <p class="lead">AP_Dev_Hub <b>不是一个单一项目</b>，而是德勤 IDDC（Deloitte Innovation &amp; Development Center）AP 研发部门的一整套<b>代码资产集合</b>：一条 AI Agent 主线（Python + Vue，当前最活跃）、一套勤栈 d.orbit 低代码平台（Java 微服务，基于开源脚手架二开）、以及一批设计与 POC 展示资产（静态站点）。</p>
+  <div class="grid">
+    <div class="stat-card"><b>8</b>独立 Git 仓库</div>
+    <div class="stat-card"><b>3</b>条产品线</div>
+    <div class="stat-card"><b>~6,800</b>受版本控制文件</div>
+    <div class="stat-card"><b>309</b>次提交 · 主要贡献者 jameszhan</div>
+  </div>
+  <div class="callout">
+    <b>GitLab 组</b>
+    全部仓库位于同一 GitLab 组：<code>http://10.201.197.113:8443/internal_projects/ap_dev_hub/</code>，归属同一产品域。
+  </div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section class="card" id="s1">
+  <h2>1. 仓库全景总览</h2>
+  <p class="lead">按目录分三块：<code>api/</code>（后端）、<code>ui/</code>（前端）、<code>design/</code>（设计与 POC 资产）。</p>
+
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+graph TD
+    ROOT["AP_Dev_Hub<br/>(GitLab: ap_dev_hub)"] --> API["api/ 后端"]
+    ROOT --> UI["ui/ 前端"]
+    ROOT --> DESIGN["design/ 设计与POC"]
+
+    API --> AG["ap_agent<br/><span class='pill py'>Python FastAPI</span><br/>AP Cowork 智能工作台"]
+    API --> DA["ap_dorbit_api<br/><span class='pill java'>Java 21 微服务</span><br/>勤栈三大服务群"]
+    API --> DF["ap_dorbit_framework<br/><span class='pill java'>Java/Maven</span><br/>公共框架 + 19 starter"]
+
+    UI --> AGUI["ap_agent_ui<br/><span class='pill vue'>Vue3+Vite</span><br/>D.Orbiter-AI 客户端"]
+    UI --> ADMUI["ap_admin_ui<br/><span class='pill vue'>Vue3+avue</span><br/>低代码管理端"]
+
+    DESIGN --> POC["ap_agent_poc<br/><span class='pill h5'>141 HTML原型</span><br/>Cowork 产品原型"]
+    DESIGN --> PC["ap_poc_center<br/><span class='pill h5'>静态站点</span><br/>POC 展示中心"]
+    DESIGN --> SK["ap_skills<br/><span class='pill h5'>静态+Python</span><br/>税务AI技能库"]
+
+    classDef hot fill:#e6f7f1,stroke:#0b6e4f,stroke-width:1.5px;
+    class AG,AGUI hot;
+    </pre>
+    <p class="diagram-caption">图 1 · AP_Dev_Hub 仓库全景（绿色为当前最活跃的 AI Agent 主线）</p>
+  </div>
+
+  <h3>1.1 仓库明细表</h3>
+  <table>
+    <tr><th>仓库</th><th>技术栈</th><th>文件数</th><th>提交</th><th>最后更新</th><th>定位</th></tr>
+    <tr><td><code>api/ap_agent</code></td><td><span class="badge">FastAPI</span><span class="badge">Alpine.js</span></td><td>99</td><td>68</td><td>2026-08-24</td><td><b>AP Cowork</b> 智能工作台后端（含自带零构建前端）</td></tr>
+    <tr><td><code>ui/ap_agent_ui</code></td><td><span class="badge">Vue3+TS+Vite</span></td><td>863</td><td>101</td><td>2026-08-24</td><td>D.Orbiter-AI Agent 交互客户端</td></tr>
+    <tr><td><code>design/ap_agent_poc</code></td><td><span class="badge">HTML原型</span></td><td>151</td><td>24</td><td>2026-07-03</td><td>Cowork 产品原型与视觉规范</td></tr>
+    <tr><td><code>api/ap_dorbit_api</code></td><td><span class="badge">Java 21</span><span class="badge">Spring Cloud</span></td><td>3,636</td><td>75</td><td>2026-07-07</td><td>勤栈平台三大微服务群</td></tr>
+    <tr><td><code>api/ap_dorbit_framework</code></td><td><span class="badge">Java/Maven</span></td><td>590</td><td>17</td><td>2026-06-25</td><td>勤栈公共框架与 19 个 starter</td></tr>
+    <tr><td><code>ui/ap_admin_ui</code></td><td><span class="badge">Vue3+avue</span></td><td>1,387</td><td>7</td><td>2026-07-14</td><td>勤栈 BOAT 低代码管理端前端</td></tr>
+    <tr><td><code>design/ap_poc_center</code></td><td><span class="badge">静态站点</span></td><td>21</td><td>7</td><td>2026-06-09</td><td>POC 展示中心导航门户</td></tr>
+    <tr><td><code>design/ap_skills</code></td><td><span class="badge">静态+Python</span></td><td>31</td><td>10</td><td>2026-06-05</td><td>税务 AI 技能库与展示门户</td></tr>
+  </table>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="card" id="s2">
+  <h2>2. 产品线 A · AI Agent 主线（AP Cowork / D.Orbiter-AI）</h2>
+  <p class="lead">这是当前<b>最活跃</b>的产品线：一个"自然语言干活的智能工作台"，用户对话即可完成数据分析、文件处理、代码生成。</p>
+
+  <h3>2.1 ap_agent 系统架构（FastAPI 单体）</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart TB
+    subgraph 浏览器["浏览器 (Alpine.js + Pinia 零构建 SPA)"]
+        SPA["x-data 组件<br/>stores.js 状态<br/>api.js axios"]
+    end
+
+    SPA -- "HTTP/SSE<br/>Bearer JWT + X-Workspace-Id" --> FASTAPI
+
+    subgraph FASTAPI["FastAPI 应用层（单容器）"]
+        direction TB
+        ROUTES["API 路由<br/>12 模块<br/>auth/workspaces/projects/folders/files<br/>skills/skill_registry/conversations<br/>artifacts/references/preview/health"]
+        MID["中间件<br/>JWT认证(Core/auth)<br/>CORS / 日志 / 异常处理"]
+        DEPS["依赖注入 deps.py<br/>DBSession/Settings/LLM/Service工厂"]
+        SERVICES["Service 业务层 (18 个)<br/>Workspace/Project/Folder/File<br/>Conversation/ClaudeAgentSDK<br/>Sandbox/Skill/Artifact/Reference..."]
+        MODELS["ORM 模型<br/>14 张 harness_ 表<br/>GUID 主键 + 时间戳"]
+        ENGINE["Agent 引擎<br/>ClaudeAgentSDKService<br/>FileWatcher / Prompts / Sandbox"]
+    end
+
+    ROUTES --> MID --> DEPS --> SERVICES --> MODELS
+    SERVICES --> ENGINE
+
+    ENGINE -- "docker.sock" --> SANDBOX["沙箱容器池<br/>ap-cowork-{env}-{hash}<br/>Docker / gVisor / Local"]
+    SANDBOX -- "bind mount 项目目录" --> FS["文件系统<br/>/app/files/workspace_{guid}/project_{guid}"]
+    SERVICES --> FS
+    MODELS --> DB[("MySQL 8.0<br/>llm_ap_cowork")]
+
+    classDef layer fill:#eef3fa,stroke:#7a9cc6,stroke-width:1px;
+    class ROUTES,MID,DEPS,SERVICES,MODELS,ENGINE layer;
+    </pre>
+    <p class="diagram-caption">图 2 · ap_agent 后端分层架构：路由 → 中间件 → DI → Service → Model，Agent 引擎旁路直连沙箱</p>
+  </div>
+
+  <h3>2.2 Agent 对话执行时序（核心玩法）</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant SPA as 前端 (Alpine SPA)
+    participant API as FastAPI (Conversation)
+    participant SDK as ClaudeAgentSDKService
+    participant SAN as 沙箱容器
+    participant FS as 项目文件系统
+    participant W as FileWatcher
+
+    U->>SPA: 发送消息（自然语言任务）
+    SPA->>API: POST /api/conversations/{id}/agent (SSE)
+    API->>SDK: ConversationAgentService.run()
+    SDK->>FS: 同步 Skill 到项目 skills/
+    SDK->>FS: 创建/读取 .memory/project_context.md（跨对话记忆）
+    SDK->>SDK: Claude SDK 多轮循环<br/>allowed_tools: Bash/Write/Read/Edit/<br/>Glob/Grep/TodoWrite/WebSearch/Agent
+    loop 每轮工具调用
+        SDK->>FS: Write/Edit 生成文件
+        SDK->>SAN: Bash 命令（Docker Shell 后端）
+        SAN-->>SDK: 执行结果
+        SDK-->>API: tool_call 事件（流式）
+        Note over U,SDK: AskUserQuestion 追问 → 挂起<br/>用户 POST /answer-question 唤醒
+    end
+    FS->>W: 文件系统变化（watchdog）
+    W-->>API: artifact 事件（生成物落库）
+    API-->>SPA: SSE: message / tool_call / artifact / todo / done
+    SPA-->>U: stream 渲染 + 产出物面板
+    </pre>
+    <p class="diagram-caption">图 3 · Agent 对话全流程：SDK 多轮工具调用 + 追问挂起 + FileWatcher 产出物捕获 + SSE 流式推送</p>
+  </div>
+
+  <h3>2.3 认证体系</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    subgraph 密码登录
+        P1[POST /api/auth/login] --> P2[bcrypt 校验] --> P3[签发 access 60min<br/>+ refresh 30天]
+    end
+    subgraph AAD 单点登录
+        A1[POST /api/auth/aad-login<br/>携带微软 token] --> A2[JWKS 校验签名/aud/exp] --> A3[按邮箱找用户<br/>不存在则自动注册] --> P3
+    end
+    P3 --> R1[常规请求: Authorization: Bearer access]
+    P3 --> R2[SSE/图片: ?access_token=]
+    P3 --> R3[过期: POST /api/auth/refresh 轮换]
+    R2 --> E[中间件校验 /api/*,<br/>白名单: login/aad-login/refresh/preview]
+    E --> S[request.state.user_id<br/>→ CurrentUserDep]
+    </pre>
+    <p class="diagram-caption">图 4 · JWT 双令牌 + AAD SSO：首次登录自动注册并创建默认工作空间</p>
+  </div>
+
+  <h3>2.4 文件上传与安全校验</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart TD
+    U["用户选择文件"] --> UPLOAD["POST /api/files (FormData)"]
+    UPLOAD --> W1{"扩展名白名单?"}
+    W1 -- 否 --> REJ1["拒绝"]
+    W1 -- 是 --> W2{"黑名单?<br/>exe / sh / bat / ps1..."}
+    W2 -- 命中 --> REJ2["拒绝（黑名单优先）"]
+    W2 -- 未命中 --> W3{"重名?"}
+    W3 -- "是且未 overwrite" --> CONFLICT["409 前端确认覆盖"]
+    CONFLICT -- 用户确认 --> W4
+    W3 -- 否 --> W4["写入磁盘<br/>workspace_guid / project_guid"]
+    W4 --> W5["写入 harness_files<br/>DiskSyncService 同步磁盘状态"]
+    W5 --> DONE["返回元信息，前端刷新文件树"]
+    Z["zip 上传"] --> Z1{"解压总大小超限额?"}
+    Z1 -- 否 --> REJZ["拒绝（防 zip 炸弹）"]
+    Z1 -- 是 --> Z2{"包内文件数超限额?"}
+    Z2 -- 否 --> REJZ
+    Z2 -- 是 --> Z3["解压入库"]
+    </pre>
+    <p class="diagram-caption">图 5 · 文件上传：扩展名双层校验 + zip 炸弹防护 + 重名 409 确认</p>
+  </div>
+
+  <h3>2.5 Skill 生成与市场流转</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    subgraph 项目内生成
+        D["对话中描述需求"] --> AG2["Agent 按 skill_creation.md 规范"] --> M1["物化到项目 skills 目录"] --> M2["同步 harness_myskills"]
+    end
+    subgraph 市场发布安装
+        PUB["POST /api/skill-registry<br/>zip 包"] --> REG["harness_skill_registry<br/>待审核"]
+        REG --> APV{"审核"}
+        APV -- approve --> OK["可见"]
+        APV -- reject --> NO["驳回"]
+        OK --> INST["POST /api/skill-registry/name/version/install"] --> M1
+    end
+    </pre>
+    <p class="diagram-caption">图 6 · Skill 两跳链路：需求→生成→物化；发布→审核→安装到目标项目</p>
+  </div>
+
+  <h3>2.6 数据库 ER（14 张 harness_ 表）</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+erDiagram
+    harness_users ||--|| harness_workspaces : owns
+    harness_workspaces ||--o{ harness_projects : has
+    harness_projects ||--o{ harness_folders : has
+    harness_folders ||--o{ harness_files : contains
+    harness_files ||--o{ harness_file_versions : versions
+    harness_projects ||--o{ harness_myskills : has
+    harness_workspaces ||--o{ harness_conversations : has
+    harness_conversations ||--o{ harness_messages : contains
+    harness_conversations ||--o{ harness_agent_runs : runs
+    harness_agent_runs ||--o{ harness_tool_calls : calls
+    harness_agent_runs ||--o{ harness_artifacts : produces
+    harness_agent_runs ||--o{ harness_references : references
+    harness_skill_registry {
+        string name
+        string version
+        string status
+        string visibility
+    }
+    </pre>
+    <p class="diagram-caption">图 7 · 数据模型：GUID 主键防暴露规模，(project_id, path) 唯一防重复路径</p>
+  </div>
+
+  <h3>2.7 安全设计三层</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    subgraph 请求层["① 请求层"]
+        A1[JWT 中间件强制校验]
+        A2[CORS 白名单]
+        A3[X-Workspace-Id 多租户隔离]
+        A4[扩展名黑白名单+大小限制]
+        A5[zip 炸弹防护]
+    end
+    subgraph 执行层["② 执行层"]
+        B1[沙箱: Docker/gVisor/Local]
+        B2[Agent 运行超时中断]
+        B3[Bash 命令安全校验+路径越界拦截]
+        B4[LLM 决策轮数上限]
+    end
+    subgraph 数据层["③ 数据层"]
+        C1[bcrypt 密码哈希]
+        C2[JWT 密钥生产强制配置]
+        C3[事务自动回滚]
+        C4[项目虚拟站点 safe_join 防 traversal]
+    end
+    A1 --> B1 --> C1
+    </pre>
+    <p class="diagram-caption">图 8 · 三层防护：请求 → 执行 → 数据</p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="card" id="s3">
+  <h2>3. 产品线 B · 勤栈 d.orbit 低代码平台（Java 体系）</h2>
+  <p class="lead">一套符合德勤客户场景的低代码/微服务构建平台，基于开源脚手架（芋道 Yudao / JeeLowCode 系）二次开发。</p>
+
+  <h3>3.1 三层架构</h3>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart TB
+    subgraph 框架层["① ap_dorbit_framework（最底层依赖提供方）"]
+        BOM["dorbit-dependencies<br/>BOM 版本仲裁 3.2.3-standard"]
+        ST["dorbit-framework<br/>19 个 spring-boot-starter<br/>web/mybatis/redis/rpc/security/<br/>tenant/excel/file/mq/monitor/<br/>protection/test/banner + dict/notice/operatelog/sms/smtp"]
+        SDK["dorbit-module-sdks<br/>3 个 RPC SDK: system-api / infra-api / bpm-api"]
+    end
+    BOM --> API_SVC["ap_dorbit_api（引用 BOM）"]
+    ST --> API_SVC
+    SDK -.Dubbo/Feign.-> API_SVC
+
+    subgraph 服务群["② ap_dorbit_api · 三大微服务群（各自独立 Maven 聚合）"]
+        direction TB
+        SB["service_base<br/>gateway/system/infra/bpm/dcode<br/>平台底座: RBAC/租户/Flowable 工作流/文件/低代码码表<br/>80 Controllers · 17 个 @DubboService"]
+        MDM["service_mdm<br/>api/mgr/ser_base/ser_biz/ser_fin<br/>主数据+财务编排: 成本中心/利润中心/币种汇率/税码/供应商客户/WBS/会计科目/SAP 同步<br/>38 Controllers · OpenFeign"]
+        AI["service_ai<br/>api/biz/common/ser-dnova/ser-harness<br/>AI 能力: Agent 对话/DSL/UI-DB 设计生成/知识库/模型工具管理/Skill<br/>25 Controllers · 封装 Dify http://10.201.219.36/v1"]
+    end
+    SB -.Nacos 注册.-> NACOS[("Nacos<br/>注册+配置中心")]
+    MDM -.Nacos 注册.-> NACOS
+    AI -.Nacos 注册.-> NACOS
+
+    subgraph 前端["③ ui/ap_admin_ui（/dorbit/admin）"]
+        ADM["Vue3.4 + avue 3.7.1 低代码管理端<br/>8 顶层菜单: 业务设计/设计模板/运行任务/系统管理/基础设施/系统监控/集成中心/AI中台<br/>自研仅 ai-dnova: agent/dsl/task"]
+    end
+    ADM -- "HTTP /dorbit-api/ 经 Gateway" --> SB
+
+    classDef layer fill:#f3f6fb,stroke:#7a9cc6;
+    class BOM,ST,SDK,SB,MDM,AI,ADM layer;
+    </pre>
+    <p class="diagram-caption">图 9 · 勤栈三层：框架（BOM+starter+SDK）→ 三大服务群（Nacos 治理）→ 低代码管理端</p>
+  </div>
+
+  <h3>3.2 技术栈速查</h3>
+  <table>
+    <tr><th>层次</th><th>选型</th></tr>
+    <tr><td>语言/运行时</td><td>Java 21 · Spring Boot 3.3.1 · Spring Cloud Alibaba</td></tr>
+    <tr><td>注册/配置</td><td>Nacos</td></tr>
+    <tr><td>数据</td><td>MyBatis-Plus + MySQL（base 主库 68 张表 / ai 11 张）+ DB2 方言脚本（mdm）</td></tr>
+    <tr><td>缓存/中间件</td><td>Redis + Redisson · MinIO（文件）· Flowable（工作流）· EasyExcel</td></tr>
+    <tr><td>RPC</td><td>service_base 用 Dubbo；service_mdm 用 OpenFeign；service_ai 无 RPC 导出</td></tr>
+    <tr><td>AI</td><td>spring-ai + 封装 <b>Dify</b>（<code>http://10.201.219.36/v1</code>，Bearer API_KEY）</td></tr>
+    <tr><td>前端</td><td>Vue 3.4 + Vite 5.2 + TS 5.2 + Element Plus + avue + vxe-table + form-create + bpmn-js/dmn-js + monaco</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <b>身份提示</b>
+    <code>ap_admin_ui</code> 的 package.json name 实为 <code>jeelowcode-ui-admin-vue3</code>，仓库指向 gitee.com/jeelowecode/JeeLowCode —— 它是基于 JeeLowCode（BOAT）的开源前端二开，自研占比极小（仅 <code>ai-dnova</code> 模块）。
+  </div>
+
+  <h3>3.3 环境映射</h3>
+  <table>
+    <tr><th>环境</th><th>后端地址</th><th>路径</th></tr>
+    <tr><td>dev</td><td><code>https://iddcpetdev.deloitte.com.cn</code></td><td><code>/dorbit-api/</code> + <code>/dorbit/admin</code></td></tr>
+    <tr><td>sit</td><td><code>https://iddcpetsit.deloitte.com.cn</code></td><td><code>/dorbit-api/</code> + <code>/dorbit/admin</code></td></tr>
+    <tr><td>local</td><td><code>localhost:58070</code></td><td><code>/admin-api</code></td></tr>
+  </table>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="card" id="s4">
+  <h2>4. 产品线 C · 设计与 POC 展示资产</h2>
+
+  <div class="grid">
+    <div style="min-width:0">
+      <h3>4.1 ap_agent_poc（141 个 HTML 原型）</h3>
+      <table>
+        <tr><th>目录</th><th>内容</th></tr>
+        <tr><td><code>cowork-design-specification/</code></td><td>《Cowork 产品通用设计规范》11 章（信息架构/协作 UX/权限模型/AI 集成/视觉系统）</td></tr>
+        <tr><td><code>原型设计/01.基础版</code> <code>02.完善版</code></td><td>迭代原型，title 为 <b>AP Cowork</b></td></tr>
+        <tr><td><code>原型设计/02.POC开发版</code></td><td>title 切换为 <b>AP DevHub AI Workspace</b></td></tr>
+        <tr><td><code>原型设计/agent-harness/</code></td><td>Agent Harness 原型入口</td></tr>
+        <tr><td><code>原型设计/BA设计的/</code></td><td>两位 BA（婷婷/永凤）各自版本</td></tr>
+      </table>
+      <p style="font-size:14px;color:var(--muted);">业务场景为真实项目：丰田 FY25/FY26 税务决算申报、AI 税务申报 POC、Top200 资产分析；当前用户 <code>Zhan, James Hua</code>。</p>
+    </div>
+    <div style="min-width:0">
+      <h3>4.2 ap_skills（税务 AI 技能库）</h3>
+      <table>
+        <tr><th>目录</th><th>内容</th></tr>
+        <tr><td><code>skills/top200/tier-percentage-chart/</code></td><td><b>唯一落地技能</b>：Top200 Excel 按 Tier 生成资产占比折线图（pandas/matplotlib/openpyxl）</td></tr>
+        <tr><td><code>skills/tax_return/</code></td><td>仅占位，无 SKILL.md</td></tr>
+        <tr><td><code>portal/</code></td><td>德勤深绿主题 Vue3+Tailwind 展示站（技能库/文档/商城/详情 + 6 设计文档）</td></tr>
+        <tr><td><code>.trae/specs/skill-hub/</code></td><td>Trae 生成的 PRD + tasks + checklist（全标完成）</td></tr>
+      </table>
+      <div class="callout">
+        <b>与 ap_agent_poc 同源</b>
+        poc 原型中的 <code>ap-document-parser-skill</code>、<code>ap-tax-refund-skill</code> 等页面，与 portal 的 DocumentParseSkill、ReturnFormSkill 一一对应：前者是<b>交互原型</b>，后者是<b>技能定义与门户</b>。
+      </div>
+    </div>
+  </div>
+
+  <h3>4.3 ap_poc_center（POC 门户壳）</h3>
+  <div class="callout warn">
+    <b>部署时的"壳"</b>
+    <code>data.js</code> 定义了 12 个 POC（AP Top 200 AI Report、分析师工作台、Self Service、AI Tax Assistant、SRM 采购、AI 软件开发协作平台、AP Skills Platform 等），但多数 <code>url</code> 指向同级目录（<code>./srm</code>、<code>./fssc</code>、<code>./ae</code>…），本仓库内<b>并不存在</b>这些目录 → 依赖部署时同级挂载其它 POC 子站，本地直接打开会 404。子目录 <code>devhub/</code> 是「Discovery Hub AI+」落地页。
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="card" id="s5">
+  <h2>5. 仓库间依赖与调用关系</h2>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart TB
+    DF["dorbit_framework<br/>(BOM + 19 starter + 3 SDK)"] -- "Maven 依赖" --> DA["dorbit_api 三大服务"]
+    DA --- SB["service_base"]
+    DA --- MDM["service_mdm"]
+    DA --- AI1["service_ai"]
+    SB -.Nacos.-> NACOS[(Nacos)]
+    MDM -.Nacos.-> NACOS
+    AI1 -.Nacos.-> NACOS
+
+    ADM["ap_admin_ui (Vue3)"] -- "HTTP /dorbit-api/ (经 Gateway)" --> SB
+    SB -- "Dubbo (17 @DubboService)" --> MDM
+    AI1 -- "HTTP 封装" --> DIFY["Dify /v1<br/>http://10.201.219.36"]
+
+    AG["ap_agent (FastAPI)<br/>引擎: Claude Agent SDK"] -- "独立部署" --> AGDB[(MySQL harness_*)]
+    AGUI["ap_agent_ui (Vue3)<br/>部署 /dorbit/agent/"] -. "疑似对接" .-> AI1
+
+    PC["ap_poc_center"] -- "部署路径引用" --> POCL["ap_agent_poc / ap_skills 子站"]
+
+    classDef ai fill:#e6f7f1,stroke:#0b6e4f;
+    class AG,AGUI,DIFY ai;
+    </pre>
+    <p class="diagram-caption">图 10 · 仓库依赖关系：两条 AI 链路<b>并行且互不依赖</b>（绿色为 Claude SDK 线，另一端为 Dify 封装线）</p>
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="card" id="s6">
+  <h2>6. 两条并行 AI 链路对比（核心发现）</h2>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    subgraph LINE1["链路 1 · ap_agent（Claude SDK）"]
+        direction TB
+        L1A["引擎: claude-agent-sdk"]
+        L1B["语言: Python FastAPI"]
+        L1C["前端: 自带 Alpine.js 零构建 SPA"]
+        L1D["存储: MySQL harness_*"]
+        L1A --- L1B --- L1C --- L1D
+    end
+    subgraph LINE2["链路 2 · service_ai + ap_agent_ui（Dify）"]
+        direction TB
+        L2A["引擎: 封装 Dify"]
+        L2B["语言: Java"]
+        L2C["前端: Vue3 + Vite"]
+        L2D["存储: MySQL ai_*"]
+        L2A --- L2B --- L2C --- L2D
+    end
+    </pre>
+    <p class="diagram-caption">图 11 · 两套 AI 实现并存：功能高度重叠（对话、Skill 市场、文件管理），且 <code>ap_agent</code> 与 <code>ap_agent_ui</code> 的 VERSION.md 逐字相同（v1.1.0, 2026-08-24）</p>
+  </div>
+  <div class="callout risk">
+    <b>为什么这是最值得确认的问题</b>
+    ap_agent 自带的 Alpine.js 前端很可能是早期实现，ap_agent_ui 是后续 Vue 重写版（或反之）。两端功能重叠，会产生<b>双份维护成本</b>。建议团队确认哪套为现行版本，另一套标记 deprecated 或合并。
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="card" id="s7">
+  <h2>7. 风险清单与建议</h2>
+
+  <h3>高风险</h3>
+  <table>
+    <tr><th>#</th><th>问题</th><th>建议</th></tr>
+    <tr><td>1</td><td><b>两套 AI 实现并存</b>，前端重复建设（Claude SDK vs Dify 封装；Alpine vs Vue）</td><td>确认现行版本，另一套 deprecated 或合并</td></tr>
+    <tr><td>2</td><td><b>SonarQube token 硬编码</b>（<code>service_ai/.gitlab-ci.yml</code>、<code>service_base/.gitlab-ci.yml</code>）</td><td>迁移到 GitLab CI 变量</td></tr>
+    <tr><td>3</td><td><b>CI 只做质量门禁不交付</b>：7 个 CI 全只有 verify+sonar，无 build/deploy stage、无 Dockerfile、无 K8s 清单；<code>ap_admin_ui</code> 甚至无 CI</td><td>补齐构建与部署流水线</td></tr>
+  </table>
+
+  <h3>中风险</h3>
+  <table>
+    <tr><th>#</th><th>问题</th></tr>
+    <tr><td>4</td><td><b>文档缺失</b>：4 个仓库 README 仍是 GitLab 默认模板（ap_dorbit_api / ap_agent_poc / ap_poc_center / ap_skills），最大仓库 ap_dorbit_api 完全无文档</td></tr>
+    <tr><td>5</td><td>ap_admin_ui README 与代码脱节（写 npm run dev，实际无 dev 脚本，只有 start/sit/build:*）</td></tr>
+    <tr><td>6</td><td><b>孤儿模块</b>：<code>service_ai/sql/dorbit-module-ai-ser-skill/</code> 未列入父 pom 的 &lt;modules&gt;，不会被构建</td></tr>
+    <tr><td>7</td><td><b>展示态与实现态脱节</b>：ap_skills portal 展示 13 个技能，实际可执行仅 1 个</td></tr>
+    <tr><td>8</td><td><b>设计源文件缺失</b>：141 个原型全是导出 HTML，无 .rp/.fig/.sketch 源文件，修改只能重画</td></tr>
+  </table>
+
+  <h3>低风险 / 待确认</h3>
+  <table>
+    <tr><th>#</th><th>问题</th></tr>
+    <tr><td>9</td><td>ap_poc_center 链接大部分是死链（依赖部署时同级挂载）</td></tr>
+    <tr><td>10</td><td>版本一致性：ap_dorbit_api 与 framework 同为 <code>3.2.3-standard</code>，但需确认 api 引用的是本地构建还是私服制品</td></tr>
+  </table>
+</section>
+
+<!-- ============ 8 ============ -->
+<section class="card" id="s8">
+  <h2>8. 建议的阅读顺序（接手路线图）</h2>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    S1["① api/ap_agent/README.md<br/>+ docs/architecture.md<br/>文档最完整，最快理解 AI 主线"] --> S2["② ui/ap_agent_ui/src/views/ap-agent/<br/>+ src/api/<br/>看实际接口契约"]
+    S2 --> S3["③ api/ap_dorbit_api/service_base/<br/>芋道风格，熟悉 yudao 直接上手"]
+    S3 --> S4["④ api/ap_dorbit_api/service_ai/README.md<br/>了解 Dify 封装方式"]
+    S4 --> S5["⑤ design/ap_agent_poc/<br/>cowork-design-specification.html<br/>自包含设计规范，理解产品意图"]
+    </pre>
+    <p class="diagram-caption">图 12 · 五步阅读路径，由浅入深</p>
+  </div>
+  <div class="callout">
+    <b>接手第一件事：向团队确认</b>
+    ① ap_agent 的 Alpine.js 前端 vs ap_agent_ui 的 Vue3 前端，哪个是现行版本？② service_ai（Dify 封装）与 ap_agent（Claude SDK）是否长期并存？
+  </div>
+  <div class="callout warn">
+    <b>环境提醒（2026-09-04 事件）</b>
+    本套代码当前位于 OneDrive 同步目录（OneDrive KFM 已接管桌面）。git 仓库置于同步目录为高危组合：.git 高频写小文件易触发 index.lock 冲突；若文件被"释放空间"转为仅联机占位符，git 将大面积报错；且代码留存企业云端存在合规考量。建议迁移至非同步目录。
+  </div>
+</section>
+
+<footer>
+  AP_Dev_Hub 全景图解报告 · 基于 8 仓库实际文件与 Git 元数据核对 · 生成于 2026-09-04
+</footer>
+
+</main>
+
+<script>
+/*__MERMAID_INLINE__*/
+</script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#eef3fa',
+      primaryBorderColor: '#7a9cc6',
+      primaryTextColor: '#1f2933',
+      lineColor: '#7a9cc6',
+      fontFamily: '"Segoe UI","Microsoft YaHei",sans-serif'
+    },
+    sequence: { useMaxWidth: true, mirrorActors: false },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    er: { useMaxWidth: true }
+  });
+  window.addEventListener('load', function () {
+    document.querySelectorAll('pre.mermaid').forEach(function (el) {
+      setTimeout(function () { el.style.visibility = 'visible'; }, 50);
+    });
+  });
+</script>
+</body>
+</html>
