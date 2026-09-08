@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Cowork 后端面试讲述手册</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #1f2933;
+    --muted: #5b6b7b;
+    --accent: #0b6e4f;
+    --accent-soft: #e6f7f1;
+    --accent2: #1a56db;
+    --warn: #b45309;
+    --warn-soft: #fff8f0;
+    --border: #e1e5ea;
+    --code-bg: #f0f3f6;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.85;
+    font-size: 16px;
+  }
+
+  /* ===== 顶部 ===== */
+  header.hero {
+    background: linear-gradient(135deg, #0b3d2e 0%, #0b6e4f 55%, #1a56db 135%);
+    color: #fff;
+    padding: 46px 28px 40px;
+  }
+  header.hero .tag {
+    display: inline-block;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.35);
+    padding: 3px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: .6px;
+    margin-bottom: 14px;
+  }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; font-weight: 700; }
+  header.hero p { margin: 4px 0 0; opacity: .93; max-width: 880px; font-size: 15px; }
+  header.hero .meta { margin-top: 16px; font-size: 13px; opacity: .8; }
+
+  /* ===== 布局 ===== */
+  .layout { max-width: 1040px; margin: 0 auto; display: flex; gap: 24px; padding: 26px 18px 80px; }
+  nav.toc {
+    flex: 0 0 250px;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    font-size: 13.5px;
+  }
+  nav.toc h3 {
+    margin: 0 0 10px 6px;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: .5px;
+  }
+  nav.toc a {
+    display: block;
+    color: #33475b;
+    text-decoration: none;
+    padding: 5px 8px;
+    border-radius: 8px;
+    margin: 1px 0;
+    line-height: 1.45;
+  }
+  nav.toc a:hover { background: var(--accent-soft); color: var(--accent); }
+  nav.toc a.lv2 { padding-left: 20px; color: #5b6b7b; font-size: 13px; }
+
+  main { flex: 1 1 auto; min-width: 0; }
+
+  /* ===== 章节卡片 ===== */
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 34px;
+    margin: 22px 0;
+    box-shadow: 0 1px 3px rgba(16,24,40,.05);
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 22px;
+    border-left: 5px solid var(--accent);
+    padding-left: 13px;
+    line-height: 1.4;
+  }
+  h3 {
+    margin: 30px 0 10px;
+    font-size: 17px;
+    color: var(--accent2);
+    line-height: 1.5;
+  }
+  h4 { margin: 22px 0 8px; font-size: 15px; color: #33475b; }
+
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 24px; }
+  li { margin: 5px 0; }
+
+  /* ===== 引述块(可以这样说) ===== */
+  blockquote.talk {
+    background: #f2fbf7;
+    border: 1px solid #c9e9dc;
+    border-left: 5px solid var(--accent);
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin: 14px 0;
+    position: relative;
+  }
+  blockquote.talk::before {
+    content: "你可以这样说";
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  blockquote.talk p { margin: 6px 0; }
+
+  /* ===== 提示框 ===== */
+  .callout {
+    border-radius: 10px;
+    padding: 13px 18px;
+    margin: 13px 0;
+    border-left: 4px solid var(--accent2);
+    background: #f2f6ff;
+    font-size: 15px;
+  }
+  .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  .callout b { display: block; margin-bottom: 3px; }
+  .callout p { margin: 4px 0; }
+
+  /* ===== 表格 ===== */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  th, td { border: 1px solid var(--border); padding: 9px 13px; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); font-weight: 600; white-space: nowrap; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  /* ===== 内联代码 ===== */
+  code {
+    background: var(--code-bg);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: .9em;
+    color: #2d3e50;
+  }
+
+  /* ===== 数字徽章 ===== */
+  .num-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    margin-right: 8px;
+  }
+
+  /* ===== 页码标记 ===== */
+  .section-kicker {
+    font-size: 12.5px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 26px 20px 40px;
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav.toc { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="tag">德勤 IDDC · AP Cowork · AI 应用开发实习生</span>
+  <h1>AP Cowork 后端面试讲述手册</h1>
+  <p>这份文档的用法:不是背,是看明白后用自己的话讲出来。每一节都给了"你可以这样说"的叙述,括号里是留给面试官追问的补充点。</p>
+  <div class="meta">基于你对项目的真实贡献 · 叙述方式以"我做了什么、为什么这么做"为主线 · 离线可看</div>
+</header>
+
+<div class="layout">
+
+  <nav class="toc">
+    <h3>目 录</h3>
+    <a href="#part1">一、项目整体介绍</a>
+    <a href="#part1-30s">　· 30 秒版(开场用)</a>
+    <a href="#part1-2min">　· 2 分钟版(展开讲)</a>
+    <a href="#part2">二、我的职责(自我介绍)</a>
+    <a href="#part3">三、简历逐点讲解</a>
+    <a href="#p1">　· 1 双模式对话引擎</a>
+    <a href="#p2">　· 2 工具链与子 Agent</a>
+    <a href="#p3">　· 3 四级工作空间</a>
+    <a href="#p4">　· 4 产出物与引用</a>
+    <a href="#p5">　· 5 Skill 双轨体系</a>
+    <a href="#p6">　· 6 三层沙箱执行</a>
+    <a href="#p7">　· 7 实时交互(SSE)</a>
+    <a href="#p8">　· 8 预览与虚拟站点</a>
+    <a href="#p9">　· 9 认证与安全</a>
+    <a href="#p10">　· 10 磁盘-数据库同步</a>
+    <a href="#part4">四、面试常见问题速答</a>
+    <a href="#part5">五、三句话收尾模板</a>
+  </nav>
+
+  <main>
+
+    <!-- ============ 第一部分 ============ -->
+    <section class="card" id="part1">
+      <div class="section-kicker">Part 1</div>
+      <h2>一、先讲清楚"这是个什么项目"</h2>
+
+      <h3 id="part1-30s">30 秒版(开场用)</h3>
+      <blockquote class="talk">
+        <p>我做的是德勤内部的一个 <strong>AI Agent 智能工作台</strong>,叫 AP Cowork。它解决的是税务和财务顾问日常的重复性工作——比如对着一堆 Excel 做数据分析、生成审计底稿、写报告。这个系统让顾问用<strong>自然语言对话</strong>来干活:你说"分析一下这个资产表的 Tier 分布",Agent 会自动去读文件、写脚本、跑分析、把图表和报告生成出来。用户全程不用碰代码。</p>
+        <p>技术上是 Python 的 FastAPI 后端,核心引擎用的是 Claude 的 Agent SDK,数据存 MySQL,前端有一个零构建的轻量页面。我自己主要负责<strong>后端</strong>——对话引擎、文件体系、沙箱执行、技能市场这些核心模块。</p>
+      </blockquote>
+
+      <h3 id="part1-2min">2 分钟版(面试官感兴趣时展开)</h3>
+      <blockquote class="talk">
+        <p>整个系统可以概括成一句话:<strong>让 Agent 像人一样在一个"项目工作台"里干活,并且干活的每一步都可被看见、可追溯、可控制。</strong></p>
+        <p>具体拆成几个能力:</p>
+        <ol>
+          <li><strong>对话是双轨的。</strong>普通问答走"直连模式"——只把最近的聊天记录给大模型,流式回复,快而且便宜;真正干活走"Agent 模式"——Agent 有工具,可以读文件、写代码、执行命令、联网搜索,一直干到任务完成。</li>
+          <li><strong>工作空间是分层的。</strong>团队(Workspace)→ 项目(Project)→ 目录(Folder)→ 文件(File),每一层都有独立的文件目录和数据库记录,多人数据严格隔离。</li>
+          <li><strong>产出物自动归集。</strong>Agent 干完活会生成图表、报告,系统会<strong>自动监听文件变化</strong>,把这些文件登记成"产出物",用户在一个面板里就能看到并下载,不需要在目录里翻。</li>
+          <li><strong>安全是重点。</strong>Agent 要执行代码,所以我们做了沙箱:开发环境限制在本机路径内,生产环境跑在 Docker 容器里,高安全场景用 gVisor。所有危险命令在工具调用前就被拦截。</li>
+          <li><strong>技能市场。</strong>我们可以把一个"分析技能"打包成 SKILL.md 加脚本,发布到市场,审核通过后,任何用户都能一键安装到自己的项目里复用。</li>
+        </ol>
+        <p>我自己负责的是后端大部分实现,包括对话引擎、文件与项目体系、沙箱执行、技能系统,以及认证和多租户隔离。</p>
+      </blockquote>
+    </section>
+
+    <!-- ============ 第二部分 ============ -->
+    <section class="card" id="part2">
+      <div class="section-kicker">Part 2</div>
+      <h2>二、我的职责(自我介绍时用在简历后)</h2>
+      <blockquote class="talk">
+        <p>我在这个项目里的角色是<strong>后端主力开发</strong>。前端我只参与了配合(比如评审接口契约、联调流式消息),大部分后端逻辑——对话引擎、文件管理、工作空间、沙箱、技能市场——都是我一个人做的。</p>
+        <p>最有挑战的三块:</p>
+        <ul>
+          <li><strong>把 Claude Agent SDK 嵌进我们的业务体系</strong>:它原本是个通用 SDK,我要让它知道"我该在哪个项目目录干活、哪些文件不能碰、命令执行要过什么安检";</li>
+          <li><strong>流式交互的健壮性</strong>:Agent 干一次活可能跑好几分钟,网络一断任务就白干了,所以做了执行与连接解耦、断线续传;</li>
+          <li><strong>安全问题</strong>:Agent 要执行任意代码,既不能让它越权访问别的项目,也不能让危险命令跑起来。</li>
+        </ul>
+      </blockquote>
+    </section>
+
+    <!-- ============ 第三部分 ============ -->
+    <section class="card" id="part3">
+      <div class="section-kicker">Part 3</div>
+      <h2>三、简历逐点讲解</h2>
+
+      <!-- 1 -->
+      <h3 id="p1"><span class="num-badge">1</span>双模式对话引擎</h3>
+      <h4>背景:为什么做两种模式?</h4>
+      <p>大模型直接回答"快但不会干活"——它不能真正操作你的文件;而 Agent 模式"会干活但慢、贵"。闲聊、翻译、总结这类事情用直连模式;数据分析、生成底稿这种真正动手的活,才值得让 Agent 跑一套工具链。</p>
+
+      <h4>直连模式(Direct Chat)</h4>
+      <blockquote class="talk">
+        <p>用户发消息,后端先把这个消息存库,然后<strong>取最近 20 条聊天记录</strong>拼成上下文,调大模型的流式接口,每生成一小段文字就立刻通过 SSE 推给前端,用户看到的是打字机效果。全部生成完后,把完整回复存库,这样刷新页面历史还在。</p>
+      </blockquote>
+      <p>可以主动讲的细节:</p>
+      <ul>
+        <li>上下文的构造不是简单堆砌:<strong>只把"用户消息-助手回复"配对的消息放进去</strong>,避免杂乱的孤立消息污染模型;(加分点:说明你考虑了上下文质量)</li>
+        <li>用户消息<strong>先落库再开始流式</strong>,因为流式过程中前端断线重连要能拿到这条消息;</li>
+        <li>异常处理三条路:大模型出错→推一个错误事件;用户断网→生成器主动停;存库失败→兜底也要告诉前端"内容生成了"。</li>
+      </ul>
+
+      <h4>Agent 模式(Agent Chat)</h4>
+      <blockquote class="talk">
+        <p>用户发消息,后端会创建一个<strong>执行记录(Run)</strong>——这个记录贯穿整个执行:什么时候开始、用了多少 token、调了几次工具、有没有报错,全部记下来。然后准备执行环境:确保项目目录存在、建好共享记忆目录。</p>
+        <p>接着把任务交给 Claude Agent SDK:它会自己决定"先看看目录里有什么 → 读文件 → 写个脚本 → 执行 → 检查结果",每一步调用工具的过程都<strong>实时推送给前端</strong>(用户在界面上能看到"正在读文件"、"正在执行命令"),并且每一步工具调用都会落库,事后可以回放它到底干了什么。</p>
+        <p>执行结束后,把完整回答、用到的工具清单、生成的产出物、引用过的网页,全部关联到这个 Run 上,用户随时能查。</p>
+      </blockquote>
+
+      <h4>值得强调的设计:执行和连接解耦</h4>
+      <blockquote class="talk">
+        <p>Agent 干一次活可能要好几分钟,但用户的网络和浏览器是脆弱的。我把<strong>任务的执行</strong>和<strong>SSE 连接</strong>解耦了:后端起一个独立任务去跑 Agent,SSE 连接只是一个"订阅者",负责把事件转发给浏览器。用户关了页面?任务继续跑、结果正常落库。用户回来?通过断线重连接口,把断点之后的事件补发给他,他接着看。同一个对话打开两个标签页,两边都能看到进度。</p>
+      </blockquote>
+      <div class="callout">
+        <b>面试官大概率追问</b>
+        <p>那怎么防止同一个对话同时跑两个任务?——我们做了对话级互斥,有任务在跑时再来一次直接返回 409,提示用户先停掉。</p>
+      </div>
+
+      <!-- 2 -->
+      <h3 id="p2"><span class="num-badge">2</span>Agent 工具链与子 Agent</h3>
+      <h4>工具权限:一道"安检门"</h4>
+      <blockquote class="talk">
+        <p>Claude Agent SDK 本身有一套工具:读写文件、编辑文件、执行命令、搜索文件、联网搜索等。它默认是"拿到什么都能用",但这在业务里不行——所以我们在<strong>每个工具真正执行前,都过一个安全检查回调</strong>:</p>
+        <ul>
+          <li><strong>工具黑名单</strong>:SDK 里有几个内部工具(比如管理监控用的),直接禁止;</li>
+          <li><strong>路径越界检查</strong>:读写文件的路径必须落在当前项目的目录里,<code>../</code> 穿越、指向别的项目、指向系统目录,一概拒绝;传绝对路径的,我们把它重写成项目内相对路径;</li>
+          <li><strong>命令安全检查</strong>:执行命令的,先做黑名单匹配——<code>rm -rf</code>、<code>sudo</code>、<code>chmod 777</code>、<code>killall</code>、写系统目录这类危险操作,直接拒绝并告诉模型"这个命令不能用";另外命令长度设了上限,防构造超大 payload;</li>
+          <li><strong>参数剥离</strong>:SDK 的 Bash 参数里有一个"关闭沙箱"的开关,我们把它剥掉,防止模型试图绕过沙箱;</li>
+          <li><strong>自动允许与提示</strong>:文件编辑类操作自动放行(不需要每次都问用户),需要用户确认的——比如 Agent 想提问——走专门的追问机制。</li>
+        </ul>
+      </blockquote>
+
+      <h4>子 Agent 委派</h4>
+      <blockquote class="talk">
+        <p>主 Agent 的精力有限,我们把一些专项工作拆给了<strong>子 Agent</strong>。比如项目里定义了"底稿前置检查"和"底稿复核"两个子 Agent:它们只拥有只读工具(读文件、搜索),任务是拿到 checklist 跟实际资料比对,输出检查报告。</p>
+        <p>主 Agent 可以通过委派工具把任务交给它们,然后用另一个工具等待结果。好处:①职责单一,主 Agent 不会被细节淹没;②<strong>子 Agent 权限最小化</strong>——只能用只读工具,不可能改坏文件;③业务文案外置在配置文件里,想改提示词不用动代码。</p>
+      </blockquote>
+
+      <!-- 3 -->
+      <h3 id="p3"><span class="num-badge">3</span>四级工作空间模型</h3>
+      <h4>背景:为什么分四层?</h4>
+      <blockquote class="talk">
+        <p>做数据分析的工作台,核心资产是文件和项目。用户既有个人项目,也有团队协作的项目,文件还要分"你上传的"、"你生成的"、"你写的技能",所以用 Workspace(工作空间)→ Project(项目)→ Folder(目录)→ File(文件)四层来组织。</p>
+        <p>每一层对应一组 API(列表/创建/详情/删除),数据库里每一层一张表,用 UUID 做主键——不用自增 ID 是为了不暴露系统里有多少数据,也方便以后多实例扩展。</p>
+      </blockquote>
+
+      <h4>权限隔离怎么做的</h4>
+      <blockquote class="talk">
+        <p>每个工作空间只有一个属主(owner),用户只能看到自己的工作空间。所有请求带一个工作空间标识,后端校验"你确实是这个空间的主人",不是就拒绝。项目、文件这些资源的操作,也会一路向上校验归属——比如删文件,会先确认这个文件所属的目录、项目都确实在这个用户的某工作空间下,否则一律按"不存在"处理(返回 404 而不是 403,不泄露资源是否存在)。</p>
+      </blockquote>
+      <div class="callout">
+        <b>可以主动说的取舍</b>
+        <p>我们的隔离是靠<strong>每个查询显式过滤</strong>实现的,没有用 ORM 层的自动过滤器。好处是直观、可控;代价是写新查询时得记得加过滤条件,以后可以升级成统一拦截器做成框架级能力——这体现你对方案的取舍有思考。</p>
+      </div>
+
+      <h4>预置目录</h4>
+      <blockquote class="talk">
+        <p>项目一创建,自动生成三个预置目录:<strong>uploads</strong>(用户上传的资料)、<strong>skills</strong>(项目技能)、<strong>results</strong>(最终成果)。这个设计配合在提示词里给 Agent 的"文件分级"约定——中间脚本放临时目录、最终成果放 results——用户打开项目,成果一目了然,不用猜。</p>
+      </blockquote>
+
+      <!-- 4 -->
+      <h3 id="p4"><span class="num-badge">4</span>产出物(Artifact)与引用(Reference)</h3>
+      <h4>产出物:让 Agent 的"劳动成果"可见</h4>
+      <blockquote class="talk">
+        <p>Agent 干活会产生很多文件:图表、报告、数据表。如果让用户自己在目录里找,体验很差。所以我们做了一个<strong>文件监听器</strong>:实时监控项目目录,只要是 Agent 通过工具生成的、或者执行脚本产生的文件,系统自动把它登记为一条"产出物"记录,关联到这次执行任务上,并且实时推送一个事件给前端——用户看到的是"任务进行中,右下角面板一个个文件出现",全部完成后可以直接点击预览或下载。</p>
+        <p>有几个细节:</p>
+        <ul>
+          <li><strong>排除规则</strong>:Agent 的内部状态目录、共享记忆文件、临时脚本、技能定义文件,这些不展示给用户,避免噪音;</li>
+          <li><strong>防重复</strong>:一个文件被多次写入,不会重复登记,同一个执行以内按路径去重;</li>
+          <li><strong>归因准确</strong>:只有 Agent 真正写入的文件才登记,用户自己上传的文件不会被误判成产出物。</li>
+        </ul>
+      </blockquote>
+
+      <h4>引用:让"数据来源"可溯源</h4>
+      <blockquote class="talk">
+        <p>Agent 联网搜资料、读网页,这些来源我们会记成一条"引用"记录——包含了搜索用的工具、关键词、网页地址。用户看结果时,可以知道这个结论是基于哪几个网页得出的,而不是"大模型编的"。这对财务税务场景特别重要,因为<strong>结论的可追溯性是客户审计要求的</strong>。</p>
+      </blockquote>
+
+      <!-- 5 -->
+      <h3 id="p5"><span class="num-badge">5</span>Skill 双轨体系</h3>
+      <h4>背景:为什么做技能?</h4>
+      <blockquote class="talk">
+        <p>客户的业务分析需求有很强的<strong>重复性</strong>,比如"按 Tier 占比画折线图"这个活,第一遍人工教 Agent 做,第二遍就想直接复用。所以做了技能体系:一个技能就是"一份说明书 + 一组脚本"——说明书告诉 Agent 什么时候用、怎么用;脚本是真正干活的代码。</p>
+      </blockquote>
+
+      <h4>双轨是什么</h4>
+      <blockquote class="talk">
+        <p><strong>第一轨是项目内技能</strong>:任何项目都可以有自己的技能目录,Agent 干活时自动遵守里面的说明书。我在提示词里跟 Agent 约定:如果用户要求"生成技能",你按规范创建目录结构和 SKILL.md 说明书。</p>
+        <p><strong>第二轨是技能市场</strong>:把技能打包(一个 zip,带 SHA-256 校验)、发布到注册中心。发布后是"待审核"状态,管理员审核通过才公开;其他用户浏览、安装到自己的项目——安装时会校验权限、解包(防路径穿越)、把文件物化到项目的技能目录,并登记数据库。整个链路:<strong>"发布 → 审核 → 安装 → 复用"</strong>,跟软件包管理器一个思路。</p>
+        <p>设计上有三个状态并行:审核状态(通过/拒绝)、安全扫描状态、可见性(公开/私有)。发布者自己私有、审核通过才公开,权限门槛是逐步放开的。</p>
+      </blockquote>
+
+      <!-- 6 -->
+      <h3 id="p6"><span class="num-badge">6</span>三层沙箱执行</h3>
+      <h4>背景:Agent 要执行代码,怎么保证安全?</h4>
+      <blockquote class="talk">
+        <p>Agent 会写 Python 脚本、执行命令行,这是它最有价值的能力,也是最危险的能力——一次 <code>rm -rf</code> 就能把项目搞没,还能访问系统目录。所以我们把执行环境做了多层隔离。</p>
+      </blockquote>
+
+      <h4>一层层讲</h4>
+      <blockquote class="talk">
+        <p><strong>第一层,本地模式</strong>:开发环境在 Windows 上,我们不做容器,而是在命令行这层做"软隔离"——注入一个路径锁,让 Agent 在该项目的 shell 里无法 cd 到工作区之外(它 cd 出去,shell 会报错并留在原目录)。配合命令黑名单(危险命令直接拒绝),防御面够开发用了。</p>
+        <p><strong>第二层,容器模式</strong>:生产环境是 Linux,每个项目对应一个 Docker 容器,项目的文件目录挂载进容器(容器内看不到宿主机其他东西)。Agent 的所有命令都通过 <code>docker exec</code> 在容器里执行,附带超时控制。容器还做了加固:去掉所有 capabilities、禁止提权、限制内存 512M、限制 CPU 配额——就算脚本恶意,它也翻不出这个容器。</p>
+        <p><strong>第三层,高安全模式</strong>:用 gVisor 运行时(runsc)在容器外层再加一层"用户态内核"隔离,适合运行真正不可信代码的场景。</p>
+        <p>容器是有<strong>生命周期管理</strong>的:每个项目一个容器,不是每条命令一个;空闲超过一天自动停掉;并发容器数有上限,超了就淘汰最久没用的;应用退出时全部清理。这样既保证隔离,又不会浪费资源。</p>
+      </blockquote>
+
+      <div class="callout warn">
+        <b>主动说的"取舍"(加分点)</b>
+        <p>说实话,Windows 本地模式的安全强度弱于容器,它依赖命令拦截的模式覆盖。如果命令写得足够"绕"(比如拼接、转义),理论上可能绕过正则。我们靠两层补刀:第一,危险命令的拦截是组合式的(路径+命令+参数剥离);第二,生产环境本来就只在 Linux 容器里跑。面试里被问到"安不安全",我会说清楚边界:这是<strong>纵深防御</strong>,不是绝对安全。</p>
+      </div>
+
+      <!-- 7 -->
+      <h3 id="p7"><span class="num-badge">7</span>实时交互机制(SSE)</h3>
+      <h4>为什么选 SSE 而不是 WebSocket?</h4>
+      <blockquote class="talk">
+        <p>Agent 执行过程中要持续推送状态,但方向是<strong>单向的</strong>(服务端→浏览器),用 SSE 就够:它是 HTTP 的扩展,协议简单、浏览器原生支持断了自动重连、代理兼容性好。WebSocket 是双向的,在这里杀鸡用牛刀。</p>
+      </blockquote>
+
+      <h4>推送什么?</h4>
+      <blockquote class="talk">
+        <p>按事件的语义分:开始执行、思考过程、生成文字、开始调用某个工具、工具完成、待办清单更新(Agent 自己规划的任务步骤,实时打勾)、生成了新产出物、文件树变化、全部完成、出错。前端每种事件对应一种 UI 表现——工具调用在侧边面板展开,产出物在右侧面板逐个出现,待办清单显示进度。用户<strong>"看得到 Agent 正在干"</strong>这一点,对产品体验的提升是决定性的。</p>
+      </blockquote>
+
+      <h4>重头戏:断线重连</h4>
+      <blockquote class="talk">
+        <p>每个事件带一个<strong>递增序号</strong>,后端在内存里保留最近一段时间的事件环(有数量和字节双重上限)。网页断了,重新连上时带上"我看到了第 N 个事件",后端把 N 之后的事件回放给它。这样刷新页面、网络抖动、甚至换标签页,进度都不丢。</p>
+        <p>配套的还有:任务状态查询接口(打开对话页先查"有没有在跑的任务、有没有待回答的问题")、手动停止接口(取消任务,等待状态落库后告诉前端)。</p>
+      </blockquote>
+
+      <h4>Agent 提问:AskUserQuestion</h4>
+      <blockquote class="talk">
+        <p>Agent 干活中遇到需要用户决策的事——比如"这两个口径你用哪个?"——它会停下来,发一个"提问"事件,<strong>不再继续说话</strong>。前端弹出一个表单,用户填写提交;后端把答案收好;前端随即自动替用户<strong>发起第二轮对话</strong>,把答案带给 Agent。Agent 的上下文靠 SDK 的会话续传机制恢复,所以它"记得"自己刚才干到哪了,拿到答案就接着干。</p>
+        <p>有意思的细节:这个"提问"会跑到哪一步了,是<strong>存在内存的</strong>,而不是数据库;因为设计上"提问"就是让这一轮先结束(状态标完成),把待答问题挂出来——用户回答后是一场<strong>新的执行</strong>,只是用会话续传接上了上下文。面试被问"挂起的 Run 怎么恢复",一定要说清这一点,这是我自己踩过坑、想清楚的。</p>
+      </blockquote>
+
+      <!-- 8 -->
+      <h3 id="p8"><span class="num-badge">8</span>文件预览与项目虚拟站点</h3>
+      <h4>文件预览</h4>
+      <blockquote class="talk">
+        <p>Agent 生成的文件,用户不想下载也能看。做了在线预览:图片、Markdown、HTML、PDF、Excel、Word、CSV、文本。Excel 是我比较花心思的——用 pandas 读成 CSV 再转给前端,多个工作表用分隔符切分;Word 转成 HTML 内嵌图片。预览接口走登录校验,文件属于哪个工作空间,必须校验归属。</p>
+      </blockquote>
+
+      <h4>项目虚拟站点</h4>
+      <blockquote class="talk">
+        <p>Agent 会生成 HTML 网页(分析报告、可视化页面)。我们的<strong>每个项目直接就是一个网站</strong>——访问一个公开地址,就能打开这个项目的目录,响应就是硬盘上的真实文件。所以 Agent 生成一个 index.html,立刻就能通过浏览器访问,文件更新即时生效——不需要部署、不需要静态网站服务。</p>
+        <p>两个细节:①<strong>公开免登录</strong>(方便分享给非系统用户),但路径安全做得很严——拼接路径时清理特殊字符、解析符号链接、校验最终路径必须落在项目根内,越界请求一律返回 404(不暴露敏感信息);②目录请求自动找 index.html,根目录还支持 entrypoint.html 兜底,没有斜杠的目录请求会重定向补上斜杠保证相对资源路径正确。</p>
+      </blockquote>
+
+      <!-- 9 -->
+      <h3 id="p9"><span class="num-badge">9</span>认证与安全</h3>
+      <blockquote class="talk">
+        <p><strong>JWT 双令牌</strong>:登录签发两枚令牌——访问令牌 60 分钟、刷新令牌 30 天。访问令牌放请求头,过期了用刷新令牌换新的。刷新时旧刷新令牌<strong>立即作废</strong>(防止令牌泄露后被重放),这是标准的轮换机制。密钥生产环境强制配置(没配置直接启动失败),开发环境自动随机生成。</p>
+        <p><strong>微软账号单点登录</strong>:德勤员工用公司 Office 账号登录——前端把微软签发的令牌传过来,我们用微软的公钥(从 JWKS 端点拉取并缓存)验签、校验 Audience、提取邮箱,按邮箱找用户——没注册过的<strong>自动创建账号</strong>,并且自动建一个个人工作空间。密码登录则用 bcrypt 存储(种子上加盐、12 轮成本),不存明文。</p>
+        <p><strong>中间件</strong>:除登录、刷新、虚拟站点这几个公开接口,所有 API 都必须带令牌,校验通过后把用户信息注入请求,后续路由直接复用。角色权限(管理员)在需要的地方单独校验——中间件只做"你是谁",不做"你能干什么",职责分离。</p>
+      </blockquote>
+
+      <!-- 10 -->
+      <h3 id="p10"><span class="num-badge">10</span>磁盘-数据库同步</h3>
+      <h4>背景:Agent 绕过系统直接写文件,两个世界怎么一致?</h4>
+      <blockquote class="talk">
+        <p>文件既真实存在磁盘上,又有数据库记录(用户上传的、Agent 生成的都登记)。但 Agent 是绕过后端直接写文件的——它可能新建一个文件、删掉一个临时文件,数据库并不知道。所以需要一个<strong>同步器</strong>:</p>
+        <ul>
+          <li><strong>触发时机</strong>:读文件列表、文件树的时候顺手同步(懒同步,而不是每时每刻);10 秒节流防止高频请求反复扫描,每个项目一把锁防并发冲突;</li>
+          <li><strong>方向</strong>:磁盘是真相——磁盘上多出来的文件,登记进数据库(标记为"Agent 生成");磁盘上消失的,对应数据库记录删掉(涉及的产出物记录也一起清理,保持面板干净);</li>
+          <li><strong>排除</strong>:系统的内部目录、记忆文件、临时文件不参与展示,避免用户看到一堆系统垃圾。</li>
+        </ul>
+      </blockquote>
+    </section>
+
+    <!-- ============ 第四部分 ============ -->
+    <section class="card" id="part4">
+      <div class="section-kicker">Part 4</div>
+      <h2>四、面试常见问题速答(口语)</h2>
+
+      <h3>Q:这个项目和市面上"聊天助手"有什么区别?</h3>
+      <blockquote class="talk">
+        <p>聊天助手只对话,我们的 Agent <strong>真的会在文件系统里干活</strong>,并且整个过程(用了什么工具、生成了什么文件、引用了什么资料)全部落库可回放。产出物、引用、技能、沙箱这些,是"能干活的工作台"和"能聊天的玩具"的区别。</p>
+      </blockquote>
+
+      <h3>Q:双模式为什么分开?能不能只做一个?</h3>
+      <blockquote class="talk">
+        <p>直连模式快、省 token,适合问答;Agent 模式会调用工具、可能跑几分钟。混在一起,简单问题也被 Agent 工具链拖慢、还费钱。分开后,产品上也可以做"轻问答"和"重任务"两个入口。</p>
+      </blockquote>
+
+      <h3>Q:Agent 跑一半,用户关了页面,任务会怎样?</h3>
+      <blockquote class="talk">
+        <p>继续跑,结果正常落库。因为执行是独立任务,SSE 连接只是订阅者。用户回来后可以用断线重连接口从断点续看,或者通过状态查询接口拿到结果。</p>
+      </blockquote>
+
+      <h3>Q:怎么防止 Agent 故意搞破坏?</h3>
+      <blockquote class="talk">
+        <p>多层。工具调用前路径校验(只能动项目内)、命令黑名单(危险命令拒绝、剥掉关闭沙箱的参数)、沙箱执行(Linux 容器+资源限额;Windows 本地注入路径锁)、内部目录不可见。纵深防御,面面俱到但不能说绝对安全,生产环境核心是容器强制隔离。</p>
+      </blockquote>
+
+      <h3>Q:两个用户能看到对方的数据吗?</h3>
+      <blockquote class="talk">
+        <p>看不到。每个请求都带工作空间标识,后端校验属主;资源操作逐层向上校验归属;越权访问统一按 404 处理(连"存在不存在"都不告诉你)。注意:实现层面是手动过滤,我清楚它的边界——新写的查询必须记得过滤,这是我可以继续完善的点。</p>
+      </blockquote>
+
+      <h3>Q:整个系统最大的挑战是什么?</h3>
+      <blockquote class="talk">
+        <p>两件:一是<strong>把通用 SDK 嵌进业务</strong>——路径、记忆、权限、产出物,SDK 不知道你的业务,全靠回调层和提示词层把它"驯服";二是<strong>流式执行的健壮性</strong>——几十分钟的任务,网络、超时、并发、断线全都要处理,我把执行与连接解耦、加了事件回放和状态查询,这套体系是摸过很多坑才立起来的。</p>
+      </blockquote>
+
+      <h3>Q:如果让你重做,哪里会不一样?</h3>
+      <blockquote class="talk">
+        <p>①多租户隔离我会做成框架级拦截器(现在靠每个查询手动过滤,有漏网风险);②沙箱后端配置项我定义了但没落地成"三层可配",应该让它真正可配置;③事件总线现在单进程内存态(所以强制单 worker),多实例部署要换 Redis;④断线重连后端早就做了,前端还没接,应该补上。</p>
+      </blockquote>
+    </section>
+
+    <!-- ============ 第五部分 ============ -->
+    <section class="card" id="part5">
+      <div class="section-kicker">Part 5</div>
+      <h2>五、收尾——三句话自我介绍模板</h2>
+      <blockquote class="talk">
+        <p>我是这个 AI 智能工作台项目的后端主力开发。它让税务顾问用自然语言就能完成数据分析、底稿生成、报告制作。我负责对话引擎、文件体系、沙箱执行和技能市场四个核心模块,最自豪的是把 Claude Agent SDK 嵌进了我们的安全体系,并且解决了长任务流式交互的健壮性问题。</p>
+        <p>这段实习让我真正理解了:AI 应用开发的难点不是"调用模型",而是<strong>让模型在真实业务里安全、可控、可追溯地干活</strong>——提示词设计、工具权限、状态管理、异常恢复,每一层都是功课。</p>
+      </blockquote>
+    </section>
+
+    <footer>
+      AP Cowork 后端面试讲述手册 · 口语版 · 与《AP_Agent面试详解》(代码版)配合使用:
+      讲述版用于开口讲,详解版用于查细节
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>
