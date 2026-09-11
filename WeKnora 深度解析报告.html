@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeKnora 深度解析 · 项目作用 · MCP 接入 · 知识入库与检索</title>
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0c1322;
+    --panel:rgba(20,30,50,.72); --panel2:rgba(28,40,64,.6);
+    --line:rgba(120,160,220,.18); --line2:rgba(120,160,220,.34);
+    --txt:#e8eefb; --muted:#93a4c4; --dim:#6b7d9e;
+    --blue:#4f9dff; --cyan:#31d6d6; --violet:#9b7bff;
+    --green:#39d98a; --amber:#ffb44d; --pink:#ff6f9c;
+    --radius:16px;
+    --mono:ui-monospace,SFMono-Regular,"Cascadia Code",Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:80px}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.75;font-size:15px;
+    background-image:
+      radial-gradient(1100px 520px at 12% -8%,rgba(79,157,255,.16),transparent 62%),
+      radial-gradient(900px 480px at 92% 4%,rgba(155,123,255,.14),transparent 60%),
+      radial-gradient(800px 420px at 60% 100%,rgba(49,214,214,.08),transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(120,160,220,.14);border:1px solid var(--line);padding:.1em .38em;border-radius:5px;color:#cfe3ff}
+  h1,h2,h3,h4{line-height:1.35;margin:0}
+  ::selection{background:rgba(79,157,255,.35)}
+
+  /* 顶栏 */
+  .topbar{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(7,11,20,.92),rgba(7,11,20,.72));border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:1560px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.4px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));box-shadow:0 0 14px rgba(79,157,255,.85)}
+  .brand small{font-weight:500;color:var(--dim);font-size:12px;letter-spacing:0}
+  .topnav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .topnav a{color:var(--muted);font-size:13px;padding:6px 11px;border-radius:9px;border:1px solid transparent;white-space:nowrap}
+  .topnav a:hover{background:rgba(120,160,220,.12);color:var(--txt);text-decoration:none}
+
+  /* 布局 */
+  .layout{max-width:1560px;margin:0 auto;padding:26px 22px 90px;display:grid;grid-template-columns:236px minmax(0,1fr);gap:30px;align-items:start}
+  .sidebar{position:sticky;top:76px;font-size:13.5px}
+  .sidebar .grp{margin-bottom:16px}
+  .sidebar .grp-t{font-size:11px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;margin:0 0 7px 10px}
+  .sidebar a{display:block;color:var(--muted);padding:6px 11px;border-radius:8px;border-left:2px solid transparent}
+  .sidebar a:hover{background:rgba(120,160,220,.1);color:var(--txt);text-decoration:none}
+  main{min-width:0}
+
+  section{margin-bottom:56px;scroll-margin-top:82px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .sec-head h2{font-size:25px;letter-spacing:.3px}
+  .sec-head .kicker{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:1px}
+  .sec-sub{color:var(--muted);font-size:14px;margin:0 0 20px;max-width:96ch}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;backdrop-filter:blur(8px)}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:2px 9px;border-radius:999px;
+    border:1px solid var(--line2);color:#cfe0ff;background:rgba(79,157,255,.1);white-space:nowrap}
+  .tag.g{color:#bff3d8;border-color:rgba(57,217,138,.4);background:rgba(57,217,138,.1)}
+  .tag.a{color:#ffe3b8;border-color:rgba(255,180,77,.4);background:rgba(255,180,77,.1)}
+  .tag.v{color:#e0d6ff;border-color:rgba(155,123,255,.42);background:rgba(155,123,255,.12)}
+  .tag.p{color:#ffd3e2;border-color:rgba(255,111,156,.4);background:rgba(255,111,156,.1)}
+  .tag.m{color:#c9d8f2;border-color:var(--line2);background:rgba(120,160,220,.1)}
+
+  /* Hero */
+  .hero{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--line2);
+    background:linear-gradient(140deg,rgba(79,157,255,.16),rgba(155,123,255,.1) 45%,rgba(49,214,214,.09));
+    padding:34px 34px 30px;margin-bottom:34px}
+  .hero::after{content:"";position:absolute;inset:auto -60px -120px auto;width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,157,255,.28),transparent 65%);pointer-events:none}
+  .hero h1{font-size:34px;letter-spacing:.5px;margin-bottom:10px}
+  .hero h1 .grad{background:linear-gradient(100deg,#8fc4ff,#31d6d6 45%,#b79bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:#c3d2ea;max-width:92ch;margin:0 0 18px}
+  .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;position:relative;z-index:1}
+  .stat{background:rgba(8,14,26,.6);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+  .stat b{display:block;font-size:22px;letter-spacing:.4px;background:linear-gradient(120deg,#8fc4ff,#31d6d6);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat span{font-size:12px;color:var(--muted)}
+
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.5px;text-transform:uppercase;background:rgba(120,160,220,.06)}
+  tbody tr:hover{background:rgba(120,160,220,.055)}
+  td code{white-space:nowrap}
+
+  /* 流水线 */
+  .pipe{display:flex;flex-direction:column;gap:0}
+  .stage{display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;position:relative}
+  .stage .rail{display:flex;flex-direction:column;align-items:center}
+  .stage .num{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-family:var(--mono);
+    font-size:14px;font-weight:700;border:1px solid var(--line2);background:rgba(12,19,34,.9);color:#cfe3ff;flex:none}
+  .stage .stem{flex:1;width:2px;background:linear-gradient(180deg,var(--line2),rgba(120,160,220,.06));margin:6px 0}
+  .stage:last-child .stem{display:none}
+  .stage .body{padding-bottom:22px;min-width:0}
+  .stage .ttl{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+  .stage .ttl b{font-size:15.5px}
+  .stage .ttl .who{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+  .stage p{margin:0 0 8px;color:var(--muted);font-size:13.5px}
+  .stage .tech{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+  .s-write .num{border-color:rgba(79,157,255,.55);color:#bfdcff;box-shadow:0 0 0 4px rgba(79,157,255,.08)}
+  .s-read  .num{border-color:rgba(57,217,138,.55);color:#bff3d8;box-shadow:0 0 0 4px rgba(57,217,138,.08)}
+  .s-llm   .num{border-color:rgba(155,123,255,.55);color:#e0d6ff;box-shadow:0 0 0 4px rgba(155,123,255,.08)}
+
+  /* 公式块 */
+  .formula{font-family:var(--mono);font-size:13px;background:rgba(6,11,20,.72);border:1px solid var(--line);
+    border-left:3px solid var(--blue);border-radius:9px;padding:12px 15px;overflow-x:auto;color:#cfe3ff;line-height:1.8;white-space:pre}
+  .formula.g{border-left-color:var(--green)}
+  .formula.v{border-left-color:var(--violet)}
+  .note{font-size:12.5px;color:var(--dim);margin-top:8px}
+
+  /* 双栏对照 */
+  .dual{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch}
+  .dual .side{padding:20px 22px}
+  .dual .mid{width:1px;background:var(--line2);position:relative}
+  .dual .mid span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);
+    border:1px solid var(--line2);border-radius:999px;padding:4px 10px;font-size:11px;color:var(--muted);white-space:nowrap;font-family:var(--mono)}
+  @media(max-width:900px){.dual{grid-template-columns:1fr}.dual .mid{display:none}}
+
+  /* 关系图 */
+  .rel{display:grid;grid-template-columns:1fr 300px 1fr;gap:18px;align-items:center}
+  @media(max-width:1050px){.rel{grid-template-columns:1fr}}
+  .rel .col{display:flex;flex-direction:column;gap:9px}
+  .rel .hd{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+  .idx{border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:rgba(12,19,34,.6);font-size:13px}
+  .idx b{display:block;font-size:13.5px;margin-bottom:2px}
+  .idx span{color:var(--dim);font-size:12px}
+  .idx.w{border-left:3px solid var(--blue)}
+  .idx.r{border-left:3px solid var(--green)}
+  .pivot{border:1px dashed var(--line2);border-radius:14px;padding:16px;text-align:center;background:rgba(12,19,34,.72)}
+  .pivot .big{font-size:15px;font-weight:700;color:#dbe9ff;margin-bottom:4px}
+  .pivot .sub{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px}
+  .kv dt{color:var(--muted);white-space:nowrap}
+  .kv dd{margin:0}
+  ul.tight{margin:0;padding-left:19px}
+  ul.tight li{margin-bottom:5px;color:var(--muted);font-size:13.5px}
+  ul.tight li b{color:var(--txt);font-weight:600}
+  .warn{border-left:3px solid var(--amber);background:rgba(255,180,77,.07);border-radius:9px;padding:11px 15px;font-size:13.5px;color:#ffe3b8}
+  .ok{border-left:3px solid var(--green);background:rgba(57,217,138,.07);border-radius:9px;padding:11px 15px;font-size:13.5px;color:#bff3d8}
+  footer{max-width:1560px;margin:0 auto;padding:0 22px 60px;color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="dot"></span>
+      WeKnora 深度解析
+      <small>作用 · MCP 接入 · 入库 / 检索双链路</small>
+    </div>
+    <nav class="topnav">
+      <a href="#role">项目作用</a>
+      <a href="#mcp">MCP 接入 Agent</a>
+      <a href="#ingest">知识入库</a>
+      <a href="#retrieve">知识检索</a>
+      <a href="#relation">两者关系</a>
+      <a href="#evidence">实测数据</a>
+    </nav>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="grp">
+      <p class="grp-t">一 · 定位</p>
+      <a href="#role">项目作用</a>
+      <a href="#role-3">三大能力</a>
+      <a href="#role-arch">系统组成</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">二 · 对外能力</p>
+      <a href="#mcp">MCP 是什么角色</a>
+      <a href="#mcp-server">A · 作为 MCP 服务端</a>
+      <a href="#mcp-client">B · 作为 MCP 客户端</a>
+      <a href="#agent">内置 Agent 工具</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">三 · 写链路</p>
+      <a href="#ingest">知识入库总览</a>
+      <a href="#ingest-stage">十个阶段</a>
+      <a href="#ingest-fan">异步扇出</a>
+      <a href="#ingest-tech">技术栈</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">四 · 读链路</p>
+      <a href="#retrieve">知识检索总览</a>
+      <a href="#retrieve-stage">插件化阶段</a>
+      <a href="#rrf">RRF 融合</a>
+      <a href="#rerank">重排</a>
+      <a href="#retrieve-tech">技术栈</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">五 · 综合</p>
+      <a href="#relation">入库与检索的关系</a>
+      <a href="#relation-couple">配置如何耦合</a>
+      <a href="#evidence">实测数据</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ================= HERO ================= -->
+    <div class="hero">
+      <h1>WeKnora：把「文档」变成<span class="grad">可被 Agent 调用的知识底座</span></h1>
+      <p>
+        WeKnora 是腾讯开源的企业级 RAG 知识框架。它做的事情可以一句话概括：
+        <b>把散落的原始文档，加工成机器可检索、可推理、可追溯的知识资产，再通过 MCP 把这套能力交给任意 Agent 使用。</b>
+        本页聚焦三件事——它到底解决什么问题、接上 MCP 之后 Agent 能做什么、
+        以及最核心的「知识入库」与「知识检索」两条链路各自怎么实现、用了什么技术、彼此是什么关系。
+      </p>
+      <div class="hero-meta">
+        <span class="tag">Go 后端 + Vue3 前端 + Python 文档解析</span>
+        <span class="tag v">PostgreSQL / pgvector + ParadeDB</span>
+        <span class="tag m">Neo4j 知识图谱</span>
+        <span class="tag a">asynq 异步任务</span>
+        <span class="tag g">MCP 服务端 28 个工具</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b>2 条</b><span>核心链路：入库（写） / 检索（读）</span></div>
+        <div class="stat"><b>10 个</b><span>入库阶段，含 4 路并发扇出</span></div>
+        <div class="stat"><b>13 个</b><span>检索事件阶段（插件链）</span></div>
+        <div class="stat"><b>10 种</b><span>可插拔检索引擎</span></div>
+      </div>
+    </div>
+
+    <!-- ================= 1. 项目作用 ================= -->
+    <section id="role">
+      <div class="sec-head"><span class="kicker">01</span><h2>项目作用：它到底解决什么问题</h2></div>
+      <p class="sec-sub">
+        大模型本身不知道你公司的文档。把文档直接塞进上下文有三个硬伤：<b>太长塞不下、太贵、找不到关键段落</b>。
+        WeKnora 的价值就是在「原始文档」和「大模型」之间建一层工程化的中间层。
+      </p>
+
+      <div class="grid g3" style="margin-bottom:18px">
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:8px">① 解决「塞不下」</h3>
+          <p style="color:var(--muted);font-size:13.5px;margin:0">
+            把长文档切成<b>分块（chunk）</b>并预先算好向量与关键词索引。
+            提问时只取最相关的几块，而不是把整本书送给模型。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:8px">② 解决「找不到」</h3>
+          <p style="color:var(--muted);font-size:13.5px;margin:0">
+            单靠向量相似度会漏掉专有名词和精确匹配。WeKnora 用
+            <b>向量 + 关键词双路召回，再用 RRF 融合</b>，最后<b>重排</b>精挑出真正有用的段落。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:8px">③ 解决「不可信」</h3>
+          <p style="color:var(--muted);font-size:13.5px;margin:0">
+            每个回答都带<b>来源引用</b>，能回溯到具体文档与分块。
+            这是它区别于「聊天玩具」、能进企业场景的关键。
+          </p>
+        </div>
+      </div>
+
+      <div class="card" id="role-3">
+        <h3 style="font-size:17px;margin-bottom:6px">三大能力形态</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 16px">
+          同一套知识底座，对外暴露三种使用方式，复杂度递增：
+        </p>
+        <div class="grid g3">
+          <div style="border:1px solid var(--line);border-radius:12px;padding:15px;background:rgba(12,19,34,.55)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+              <span class="tag">RAG 问答</span><span class="tag m">确定性</span>
+            </div>
+            <p style="color:var(--muted);font-size:13px;margin:0">
+              固定流水线：检索 → 融合 → 重排 → 生成。
+              <b>一次检索，一次回答</b>，路径可预测、延迟低。
+            </p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:12px;padding:15px;background:rgba(12,19,34,.55)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+              <span class="tag v">ReAct Agent</span><span class="tag v">自主</span>
+            </div>
+            <p style="color:var(--muted);font-size:13px;margin:0">
+              模型自主决定<b>调哪个工具、调几次</b>：可以先查知识库、再查图谱、
+              不够就联网搜索，多轮迭代后才回答。
+            </p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:12px;padding:15px;background:rgba(12,19,34,.55)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+              <span class="tag p">Wiki 模式</span><span class="tag p">结构化</span>
+            </div>
+            <p style="color:var(--muted);font-size:13px;margin:0">
+              入库时就把文档<b>重写成互相链接的百科页面</b>，
+              检索时可以沿着链接扩散，适合方法论、制度这类成体系的资料。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="role-arch" style="margin-top:16px">
+        <h3 style="font-size:17px;margin-bottom:10px">系统由哪些部分组成</h3>
+        <div class="grid g2">
+          <div>
+            <dl class="kv">
+              <dt>Go 应用</dt><dd>核心业务：分块、编排、检索、Agent、API。容器名 <code>app</code></dd>
+              <dt>Python docreader</dt><dd>只做<b>文档解析与图片抽取</b>，不做分块 / OCR / VLM</dd>
+              <dt>PostgreSQL</dt><dd>业务数据 + <b>向量索引</b>（pgvector）+ <b>关键词索引</b>（ParadeDB）</dd>
+              <dt>Redis</dt><dd>asynq 异步队列（入库后处理）与缓存</dd>
+              <dt>Vue3 前端</dt><dd>管理台与对话界面，经 nginx 反代到 app</dd>
+            </dl>
+          </div>
+          <div>
+            <dl class="kv">
+              <dt>Neo4j</dt><dd>知识图谱存储（实体-关系），可选 profile</dd>
+              <dt>Ollama</dt><dd>本地嵌入模型运行时（bge-m3，1024 维）</dd>
+              <dt>SearXNG</dt><dd>联网搜索后端，可选</dd>
+              <dt>Langfuse</dt><dd>全链路可观测：每次 LLM 调用都是一条 trace</dd>
+              <dt>MCP Server</dt><dd>把上述能力以 28 个工具形式暴露给外部 Agent</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="ok" style="margin-top:14px">
+          <b>一句话定位：</b>Go 应用是大脑与调度器，docreader 是眼睛（读文档），
+          Postgres 是记忆（索引），Redis 是待办清单（异步任务），
+          Neo4j 是关系网，MCP 是接口。
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2. MCP ================= -->
+    <section id="mcp">
+      <div class="sec-head"><span class="kicker">02</span><h2>通过 MCP 接入 Agent 之后，能实现哪些功能</h2></div>
+      <p class="sec-sub">
+        这里有个容易混淆的点：<b>WeKnora 同时扮演 MCP 的两个角色</b>。
+        搞清方向，才知道「接入」究竟接的是什么。
+      </p>
+
+      <div class="grid g2" style="margin-bottom:18px">
+        <div class="card" id="mcp-server" style="border-color:rgba(79,157,255,.42)">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+            <span class="tag">A · 服务端</span>
+            <h3 style="font-size:16px">WeKnora 提供工具，外部 Agent 来调用</h3>
+          </div>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+            它把知识库能力包装成一个 MCP Server（Python 实现，<b>共 28 个工具</b>）。
+            任何支持 MCP 的客户端（Claude Desktop、Cursor、DSH 等）挂上它之后，
+            模型就「长出了」读写知识库的手脚。
+          </p>
+          <div class="formula">外部 Agent ──MCP 协议──▶ WeKnora MCP Server ──▶ 知识库 / 图谱 / Wiki</div>
+          <p class="note">
+            本机就是这样接的：DSH 把仓库里的 <code>mcp-server/run_server.py</code> 注册成
+            <code>mcp__weknora__*</code> 系列工具，共 28 个。
+          </p>
+        </div>
+
+        <div class="card" id="mcp-client" style="border-color:rgba(57,217,138,.42)">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+            <span class="tag g">B · 客户端</span>
+            <h3 style="font-size:16px">WeKnora 作为调用方，去用别人的工具</h3>
+          </div>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+            它的内置 Agent 也可以挂载<b>外部 MCP 服务</b>，
+            把企业已有的系统（工单、ERP、内部 API）变成 Agent 可调用的工具。
+          </p>
+          <div class="formula g">内置 Agent ──MCP 协议──▶ 外部 MCP Server（工单 / ERP / …）</div>
+          <p class="note">
+            两个方向互不冲突，可以同时开启：它既是知识库的提供方，也是其他系统的消费方。
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:17px;margin-bottom:6px">接上之后，Agent 具体多出哪些能力</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 16px">
+          按「能做什么事」归类，而不是按工具名罗列：
+        </p>
+        <table>
+          <thead>
+            <tr><th style="width:22%">能力类别</th><th style="width:38%">Agent 可以做</th><th>实际意义</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>知识库管理</b></td>
+              <td>建/删知识库、查配置、开关向量 / 关键词 / 图谱 / Wiki 四条索引管线</td>
+              <td>让 Agent 自己决定「这批资料该用什么方式索引」</td>
+            </tr>
+            <tr>
+              <td><b>文档摄入</b></td>
+              <td>从本地文件或 URL 入库、批量重解析、取消解析、删除条目</td>
+              <td>Agent 能主动把新资料喂进知识库，而不只是被动查询</td>
+            </tr>
+            <tr>
+              <td><b>混合检索</b></td>
+              <td><code>hybrid_search</code>：一次拿到向量 + 关键词融合后的分块</td>
+              <td>比单纯向量检索准，专有名词也不漏</td>
+            </tr>
+            <tr>
+              <td><b>RAG 问答</b></td>
+              <td><code>chat</code>：检索后由大模型总结成答案</td>
+              <td>直接得到答案而非一堆片段</td>
+            </tr>
+            <tr>
+              <td><b>自主多步推理</b></td>
+              <td><code>agent_chat</code>：模型自己决定调哪些工具、调几轮</td>
+              <td>复杂问题可「先查库、再查图谱、不够再联网」</td>
+            </tr>
+            <tr>
+              <td><b>知识图谱</b></td>
+              <td>读取实体关系配置、对文本做实体关系抽取</td>
+              <td>让 Agent 配置「抽什么实体、抽什么关系」，把非结构化文本变成关系网</td>
+            </tr>
+            <tr>
+              <td><b>Wiki 运营</b></td>
+              <td>搜索 / 读取 / 重建链接、健康检查、自动修复、看统计</td>
+              <td>把知识库当维基来维护，而不只是检索</td>
+            </tr>
+            <tr>
+              <td><b>模型与凭证</b></td>
+              <td>注册 LLM / 嵌入 / 重排 / 视觉模型，测试连通性</td>
+              <td>Agent 可自助配置底层模型</td>
+            </tr>
+            <tr>
+              <td><b>解析过程控制</b></td>
+              <td>查看分块、编辑分块、重生成、调解析参数</td>
+              <td>出问题时能定位到「哪一块读错了」</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" id="agent" style="margin-top:16px">
+        <h3 style="font-size:17px;margin-bottom:6px">另外还有一层：内置 Agent 的工具</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">
+          上面的 28 个是<b>对外暴露</b>的 MCP 工具；WeKnora 自己的 ReAct Agent 还内置了一套工具，
+          两者是不同层面。检索相关的内置工具里最关键的是 <code>knowledge_search</code>：
+        </p>
+        <div class="warn" style="margin-bottom:14px">
+          <b>坑一（配置硬约束）：</b>内置 Agent 只要启用了 <code>knowledge_search</code>，
+          就<b>必须为这个 Agent 单独绑定重排模型</b>（<code>rerank_model_id</code>），
+          否则会直接报错 <code>rerank model is not configured</code>。
+          这是它和普通 RAG 问答的一个硬性差异——普通问答走全局重排配置，Agent 走自己的。
+        </div>
+        <div class="warn">
+          <b>坑二（命名陷阱，我实地验证过）：</b>Agent 内置工具里有一个叫
+          <code>query_knowledge_graph</code> 的工具，名字看着就是「查图谱」。
+          但读源码会发现，它在 <code>internal/agent/tools/query_knowledge_graph.go</code> 里
+          调用的其实是 <code>HybridSearch</code>，<b>根本不会碰到图数据库</b>；
+          该文件里甚至明确写着一行
+          <code>Full graph query language (Cypher) support is under development</code>。
+          所以它实际上是「混合检索 + 把你的图谱抽取配置读出来展示给你看」，而不是真正的图查询。
+          真正会走图谱的是<b>对话检索链路内部</b>的实体检索（见下一节），不是这个工具。
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. 入库 ================= -->
+    <section id="ingest">
+      <div class="sec-head"><span class="kicker">03</span><h2>知识入库：把文档变成索引（写链路）</h2></div>
+      <p class="sec-sub">
+        入库的目标不是「存起来」，而是<b>预先把所有未来检索需要的东西都算好</b>。
+        这是一条重成本、可异步、可失败重试的链路。
+      </p>
+
+      <div class="card" style="margin-bottom:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+          <div style="padding-right:18px">
+            <h4 style="font-size:14px;color:var(--blue);margin-bottom:6px">同步段（阻塞上传请求）</h4>
+            <p style="color:var(--muted);font-size:13.5px;margin:0">
+              校验 → 落盘原始文件 → 建知识条目 → 投递任务。
+              <b>很快</b>，用户几乎立刻拿到返回。
+            </p>
+          </div>
+          <div style="padding-left:18px;border-left:1px solid var(--line2)">
+            <h4 style="font-size:14px;color:var(--violet);margin-bottom:6px">异步段（asynq 队列）</h4>
+            <p style="color:var(--muted);font-size:13.5px;margin:0">
+              解析 → 分块 → 嵌入 → 摘要 → 图谱 → 问题 → 图片理解 → Wiki。
+              <b>慢</b>，可能几分钟，失败可重试。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pipe" id="ingest-stage">
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">1</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>上传与校验</b><span class="who">Go · handler</span></div>
+            <p>接收文件，解析出「本次生效的处理配置」= 知识库默认值 + 本次上传覆盖项。
+               此处会做<b>前置拦截</b>：上传图片文件但没配视觉模型，直接拒绝，不会等到异步阶段才失败。</p>
+            <div class="tech"><span class="tag">HTTP 上传</span><span class="tag">配置合并与校验</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">2</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>原始文件落盘</b><span class="who">存储后端</span></div>
+            <p>按 <code>租户/知识ID/时间戳.后缀</code> 存原始文件。本机用本地存储
+              （<code>/data/files/…</code>），也支持 MinIO / COS 等对象存储。</p>
+            <div class="tech"><span class="tag">local / MinIO / COS</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">3</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>文档解析</b><span class="who">Python docreader · gRPC</span></div>
+            <p>Go 通过 gRPC 把文件字节交给独立的 Python 解析服务，拿回
+              <b>Markdown 正文 + 内嵌图片引用</b>。解析引擎按文件类型路由——
+              PPTX / PDF / DOCX 走 <code>anydoc</code>，Markdown / HTML 走 <code>builtin</code>，
+              CSV / TXT 走 <code>simple</code>。</p>
+            <p class="note" style="margin-bottom:0">
+              关键设计：docreader <b>刻意保持轻量</b>——它自己的文档字符串写着
+              「No chunking, no storage, no OCR, no VLM」。分块、存储、光学识别、视觉理解
+              <b>全在 Go 侧做</b>。这样解析服务可以独立扩缩容，也不会把模型依赖塞进解析进程。
+            </p>
+            <div class="tech"><span class="tag">gRPC</span><span class="tag">anydoc</span><span class="tag">builtin</span><span class="tag">simple</span><span class="tag m">markitdown</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">4</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>图片资源落库与改写</b><span class="who">Go · image resolver</span></div>
+            <p>解析结果里的图片会被单独存为资源，Markdown 里的图片地址被<b>改写成内部 resource URL</b>。
+              同时有一道<b>图标过滤</b>：太小（任一边 &lt; 64px）或太小（&lt; 512 字节）的图直接丢弃，
+              避免把一堆装饰性小图送去理解。</p>
+            <div class="tech"><span class="tag">资源服务</span><span class="tag">图标过滤</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">5</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>分块 Chunking</b><span class="who">Go · 纯代码，不调模型</span></div>
+            <p>把长文切成检索的基本单元。默认 <b>512 字符 / 重叠 80</b>，
+              分隔符优先级是「段落 → 换行 → 句号/问号等」。
+              <code>strategy=auto</code> 时先做一次<b>结构画像</b>，再决定用
+              标题感知 / 启发式 / 递归中的哪一档切法。</p>
+            <p>可选<b>父子分块</b>：小的子块用于向量匹配（命中更准），命中后返回大的父块给模型（上下文更全）。
+              这是「检索精度」和「上下文完整度」之间一个很实用的折中。</p>
+            <div class="tech"><span class="tag">512 / 80</span><span class="tag">strategy=auto</span><span class="tag">父子分块 4096/384</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">6</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>向量化</b><span class="who">嵌入模型</span></div>
+            <p>每个分块送嵌入模型算出向量，写入向量索引。本机用本地 Ollama 上的
+              <b>bge-m3，1024 维</b>——维度必须和库里的索引列完全一致。</p>
+            <div class="tech"><span class="tag g">bge-m3 · 1024 维</span><span class="tag">Ollama</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">7</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>文档摘要</b><span class="tag v">调 LLM</span></div>
+            <p>整篇文档交给大模型生成摘要，作为文档级的一等分块。作用是让「这篇讲什么」这类
+              宏观问题不必靠拼凑片段来回答。</p>
+            <div class="tech"><span class="tag v">LLM</span><span class="tag">summary 分块</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">8</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>后处理扇出（四路并发）</b><span class="tag v">调 LLM / VLM</span></div>
+            <p>这是入库最重、也最能体现设计意图的一步。四类任务各自独立投递到队列、并发执行，
+              互不阻塞——某一路失败不会拖垮整篇文档：</p>
+            <div class="grid g4" style="margin:12px 0 0">
+              <div style="border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px">实体关系抽取</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:5px 0 0">
+                  逐分块让 LLM 抽实体与关系，写进<b>图数据库</b>。
+                  抽取规则（示例文本 / 关系类型 / 附加要求）由知识库配置决定。
+                </p>
+              </div>
+              <div style="border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px">问题生成（Doc2Query）</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:5px 0 0">
+                  为每个分块生成若干「用户可能会问的问题」，
+                  <b>每个问题单独作为一条检索入口</b>指向原分块。
+                </p>
+              </div>
+              <div style="border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px">图片多模态理解</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:5px 0 0">
+                  每张图<b>调两次视觉模型</b>：一次光学识别（取图中文字），
+                  一次生成描述。产出两种子分块。
+                </p>
+              </div>
+              <div style="border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px">Wiki 页面生成</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:5px 0 0">
+                  把文档重写成<b>互相链接的百科页</b>，含实体页、概念页、摘要页与目录。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">9</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>写入索引</b><span class="who">检索存储</span></div>
+            <p>所有产出的分块（正文 / 摘要 / 图片识别 / 图片描述 / 生成的问题）
+              统一写入<b>向量索引</b>与<b>关键词索引</b>，成为可被检索的对象。</p>
+            <div class="tech"><span class="tag g">向量索引</span><span class="tag g">关键词索引</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-write">
+          <div class="rail"><div class="num">10</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>收尾与可观测</b><span class="who">编排层</span></div>
+            <p>等待所有子任务收敛，更新文档状态为「已完成」并重新启用检索。
+              每个阶段都会记录<b>处理时间线</b>，每次模型调用都上报到 Langfuse——
+              出问题时能回答「是解析错了、还是分块错了、还是模型读错了」。</p>
+            <div class="tech"><span class="tag">处理时间线</span><span class="tag m">Langfuse trace</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card" id="ingest-fan" style="margin-top:8px">
+        <h3 style="font-size:16px;margin-bottom:10px">为什么用「队列扇出」而不是一条直线走完</h3>
+        <ul class="tight">
+          <li><b>成本与延迟不对称</b>：分块不花钱也不慢，但图谱、问题、图片理解要调成百上千次模型。
+              混在一条流水线里，任何一步慢都会把整篇卡住。</li>
+          <li><b>失败粒度不同</b>：图谱失败不应该导致正文搜不到。拆成独立任务后，可以只重试失败的那一路。</li>
+          <li><b>可开关</b>：知识库上的四个开关（向量 / 关键词 / 图谱 / Wiki）决定扇出哪几路。
+              关掉图谱就完全不会有图数据库调用。</li>
+          <li><b>可并发</b>：按分块批量投递（问题生成每 20 个分块一批），多 worker 并行消费。</li>
+        </ul>
+      </div>
+
+      <div class="card" id="ingest-tech" style="margin-top:16px">
+        <h3 style="font-size:16px;margin-bottom:12px">入库用到的技术</h3>
+        <table>
+          <thead><tr><th style="width:20%">环节</th><th style="width:26%">技术 / 组件</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>进程间通信</td><td><code>gRPC</code></td><td>Go ↔ Python 解析服务，传文件字节，回 Markdown + 图片</td></tr>
+            <tr><td>文件类型路由</td><td><code>anydoc</code> / <code>builtin</code> / <code>simple</code></td><td>按扩展名把文件派给最合适的解析器</td></tr>
+            <tr><td>异步任务</td><td><code>asynq</code>（Redis）</td><td>后处理扇出、重试、超时、并发控制</td></tr>
+            <tr><td>嵌入</td><td><code>bge-m3</code>（1024 维）</td><td>经 Ollama 的 OpenAI 兼容接口调用</td></tr>
+            <tr><td>向量存储</td><td>PostgreSQL + <code>pgvector</code></td><td><code>halfvec(1024)</code> 列 + HNSW 索引</td></tr>
+            <tr><td>关键词存储</td><td>ParadeDB <code>pg_search</code></td><td>BM25 全文检索，与向量同库</td></tr>
+            <tr><td>图存储</td><td><code>Neo4j</code></td><td>实体为节点、关系为边，按知识库 / 知识条目分区</td></tr>
+            <tr><td>大模型</td><td>可插拔（本机 DeepSeek）</td><td>摘要、图谱抽取、问题生成、Wiki 撰写</td></tr>
+            <tr><td>视觉模型</td><td>可插拔（本机 GLM-4.6V）</td><td>图片光学识别 + 描述生成</td></tr>
+            <tr><td>可观测</td><td><code>Langfuse</code></td><td>每次模型调用一条 trace，带 token 用量与耗时</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 4. 检索 ================= -->
+    <section id="retrieve">
+      <div class="sec-head"><span class="kicker">04</span><h2>知识检索：把问题变成答案（读链路）</h2></div>
+      <p class="sec-sub">
+        检索是一条<b>同步、低延迟</b>的链路。它不生成新知识，只负责
+        「在入库期已经算好的索引里，快速挑出最该给模型看的几块，并组织成上下文」。
+      </p>
+
+      <div class="card" style="margin-bottom:18px">
+        <h3 style="font-size:16px;margin-bottom:8px">它不是一段代码，而是一条<b>插件链</b></h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+          实现上，检索被拆成一组「事件」，每个插件声明自己关心哪些事件，
+          运行时按注册顺序串成责任链。好处是：想加一路召回（比如新增 Wiki 加权、实体检索），
+          只要插一个插件，不用改动主流程。
+        </p>
+        <div class="formula">外部工具（如 DSH）
+        │
+        └─▶ WeKnora MCP Server ──▶ REST API ──▶ 会话 ──▶ 检索插件链 ──▶ 答案 + 引用</div>
+        <p class="note">
+          本机实测：DSH 通过 MCP 调用 <code>list_knowledge_bases</code> /
+          <code>get_knowledge_base</code> / <code>list_knowledge</code> /
+          <code>hybrid_search</code> 等工具，全部正常返回。
+        </p>
+      </div>
+
+      <div class="pipe" id="retrieve-stage">
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">1</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>加载会话历史</b><span class="who">event: load_history</span></div>
+            <p>取出多轮对话上下文。这是「它」「那个方案」这类指代能被理解的前提。</p>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">2</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>查询理解与改写</b><span class="who">event: query_understand</span><span class="tag v">调 LLM</span></div>
+            <p><b>这一步是检索质量的分水岭。</b>用户的原始问句往往不适合直接拿去检索——
+              指代不明、口语化、或需要拆成多个子问题。
+              这里会把问题改写成更适合检索的形式（查询扩展 / 多查询），
+              有时也做结构化理解，把问题映射成「实体 + 意图」。</p>
+            <div class="tech"><span class="tag v">查询改写</span><span class="tag v">查询扩展</span><span class="tag">查询理解</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">3</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>双路召回</b><span class="who">event: chunk_search / chunk_search_parallel</span></div>
+            <p>改写后的查询<b>同时</b>走两条路：</p>
+            <div class="grid g2" style="margin:12px 0 0">
+              <div style="border:1px solid var(--line);border-radius:11px;padding:13px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px;color:#8fc4ff">向量检索（语义）</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:6px 0 0">
+                  把查询也嵌入成 1024 维向量，在库里按<b>余弦距离</b>找最近的分块。
+                  强项是「意思相近但用词不同」。
+                </p>
+              </div>
+              <div style="border:1px solid var(--line);border-radius:11px;padding:13px;background:rgba(12,19,34,.55)">
+                <b style="font-size:13.5px;color:#ffe3b8">关键词检索（字面）</b>
+                <p style="color:var(--dim);font-size:12.5px;margin:6px 0 0">
+                  BM25 全文匹配。强项是<b>专有名词、编号、型号、缩写</b>——
+                  这些恰恰是向量检索最容易漏掉的。
+                </p>
+              </div>
+            </div>
+            <p class="note" style="margin-bottom:0">
+              两路可以并行（多查询 / 多知识库时走 parallel 分支）。
+              这一步通常<b>不做重排</b>，只负责「尽量别漏」，所以召回数量放得比较宽。
+            </p>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">4</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>RRF 融合</b><span class="who">服务层 · 纯算法</span></div>
+            <p>两路结果分数<b>尺度不同</b>（向量是余弦相似度，关键词是 BM25 分值，量纲完全不一样），
+              不能简单相加。WeKnora 用的是<b>基于排名</b>的融合——只关心「排第几」，不关心「多少分」，
+              从而天然免疫尺度差异。</p>
+            <div class="formula">score = w_vector / (k + 向量排名)  +  w_keyword / (k + 关键词排名)
+
+默认值： k = 60     w_vector = 0.7     w_keyword = 0.3</div>
+            <p class="note">
+              RRF 分数范围极小——按默认权重，两路都排第 1 时也只有
+              (0.7+0.3)/61 ≈ <b>0.016</b>。正因如此，<b>阈值过滤必须在融合之前完成</b>：
+              融合后再拿 0.15 / 0.3 这种「相似度」量纲的阈值去筛，会把结果全部滤空。
+              这是实现上最容易搞错的地方。
+            </p>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">5</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>实体 / 图谱检索</b><span class="who">event: entity_search · 由上一阶段的并行检索在内部调用</span><span class="tag m">可选</span></div>
+            <p><b>注意它不是一个与双路召回并列的顶层阶段。</b>
+              并行检索阶段会在自己的流程里<b>直接调用</b>实体检索插件——
+              从问题中识别出实体，拿实体去图数据库做节点检索，把命中的节点与关系收集起来。</p>
+            <p>这条路的价值在于：<b>「A 和 B 之间是什么关系」这类问题，靠文本相似度几乎命中不了</b>，
+              因为答案不在任何单个分块的文字里，而在关系结构里。
+              图谱结果会带上自己独立的匹配类型标记（区别于向量和关键词），
+              并在合并前<b>剔除已经在前两路出现过的分块</b>，避免重复占用上下文预算。</p>
+            <div class="tech"><span class="tag m">图数据库节点检索</span><span class="tag m">独立的匹配类型</span><span class="tag">结果去重</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">6</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>重排 Rerank</b><span class="who">event: chunk_rerank</span><span class="tag a">效果提升最大的一步</span></div>
+            <p>召回阶段为了「不漏」会捞回几十条，其中必然混着大量弱相关结果。
+              重排用一个<b>更贵但更准</b>的模型对这几十条重新打分排序，再截取前若干条。</p>
+            <div class="formula v">召回：广撒网（top 50）  ──重排──▶  精选（top 10）</div>
+            <p>WeKnora 的重排走统一的 HTTP 契约：向 <code>{base_url}/rerank</code> 发请求，
+              期望返回带 <code>index</code> 与 <code>relevance_score</code> 的结果数组。
+              所以任何满足这个契约的服务都能接——本机就是用一个
+              <b>「用大模型打分」的适配服务</b>顶上的。</p>
+            <div class="tech"><span class="tag a">RerankTopK = 10</span><span class="tag a">RerankThreshold = 0.2</span><span class="tag">/{base_url}/rerank 统一契约</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">7</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>联网补充</b><span class="who">event: web_fetch</span><span class="tag m">可选</span></div>
+            <p>知识库里没有、或问题本身需要外部信息时，走联网搜索补充证据。
+              本机接的是自建 SearXNG。</p>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">8</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>上下文合并组装</b><span class="who">event: chunk_merge</span></div>
+            <p>把选中的分块拼成给模型的上下文。这一步不是简单拼接，而是包含几种「还原」：</p>
+            <ul class="tight" style="margin-top:8px">
+              <li><b>父块还原</b>——命中子块时，改取它所属的父块，给模型更完整的上下文</li>
+              <li><b>图片信息注入</b>——把图片的光学识别文本与描述并入分块内容</li>
+              <li><b>生成问题并入</b>——入库期生成的问题也作为该分块的补充文本</li>
+              <li><b>重叠去重</b>——相邻分块有重叠区，合并时要去掉重复段落</li>
+              <li><b>历史合并</b>——把多轮对话的相关历史一并纳入</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="stage s-llm">
+          <div class="rail"><div class="num">9</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>组装消息并生成</b><span class="who">into_chat_message → chat_completion(_stream)</span></div>
+            <p>按提示词模板把「系统指令 + 检索到的上下文 + 用户问题 + 历史」拼成最终请求，
+              调大模型生成回答。前端默认走<b>流式</b>，边生成边显示。</p>
+            <div class="tech"><span class="tag">提示词模板</span><span class="tag">流式输出</span></div>
+          </div>
+        </div>
+
+        <div class="stage s-read">
+          <div class="rail"><div class="num">10</div><div class="stem"></div></div>
+          <div class="body">
+            <div class="ttl"><b>引用与截断</b><span class="who">references / filter_top_k</span></div>
+            <p>把回答和它的证据来源绑定，返回给前端渲染成可点击的引用角标；
+              同时按配置做最终条数截断，防止上下文超预算。</p>
+            <div class="tech"><span class="tag g">来源引用</span><span class="tag">最终截断</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card" style="margin-top:8px">
+        <h3 style="font-size:16px;margin-bottom:8px">完整的 13 个事件阶段</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+          上面 10 张卡片是按「一件事」合并后的讲法。代码里的原始阶段划分是 13 个事件——
+          其中检索并行分支、数据分析、流式与非流式生成是独立事件，故数量更多：
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          <span class="tag">load_history</span>
+          <span class="tag v">query_understand</span>
+          <span class="tag g">chunk_search</span>
+          <span class="tag g">chunk_search_parallel</span>
+          <span class="tag m">entity_search</span>
+          <span class="tag a">chunk_rerank</span>
+          <span class="tag m">web_fetch</span>
+          <span class="tag g">chunk_merge</span>
+          <span class="tag m">data_analysis</span>
+          <span class="tag g">into_chat_message</span>
+          <span class="tag v">chat_completion</span>
+          <span class="tag v">chat_completion_stream</span>
+          <span class="tag g">filter_top_k</span>
+        </div>
+        <p class="note">
+          紫色 = 需要调用大模型的阶段；绿色 = 检索链路本体；橙色 = 决定最终质量的重排；
+          灰色 = 可选或辅助能力。
+        </p>
+        <p class="note">
+          <b>两个容易看错的地方：</b>①<code>entity_search</code> 虽然是一个独立事件，
+          但<b>没有独立的顶层触发点</b>，它是由 <code>chunk_search_parallel</code> 在内部调用的
+          ——所以它在地理上「嵌在」并行检索里面，而不是和双路召回平级。
+          ②<code>chat_completion</code> 与 <code>chat_completion_stream</code> 是同一个逻辑步骤的
+          非流式 / 流式两种实现，实际只会触发其中一个。
+        </p>
+      </div>
+
+      <div class="card" id="rrf" style="margin-top:16px">
+        <h3 style="font-size:16px;margin-bottom:10px">检索参数默认值一览</h3>
+        <div class="grid g2">
+          <div>
+            <table>
+              <thead><tr><th>参数</th><th>默认</th><th>作用</th></tr></thead>
+              <tbody>
+                <tr><td><code>EmbeddingTopK</code></td><td>50</td><td>向量召回条数</td></tr>
+                <tr><td><code>VectorThreshold</code></td><td>0.15</td><td>向量相似度下限（融合前）</td></tr>
+                <tr><td><code>KeywordThreshold</code></td><td>0.3</td><td>关键词分数下限（融合前）</td></tr>
+                <tr><td><code>RRFK</code></td><td>60</td><td>RRF 平滑常数</td></tr>
+                <tr><td><code>RRFVectorWeight</code></td><td>0.7</td><td>向量权重</td></tr>
+                <tr><td><code>RRFKeywordWeight</code></td><td>0.3</td><td>关键词权重</td></tr>
+                <tr><td><code>RerankTopK</code></td><td>10</td><td>重排后保留条数</td></tr>
+                <tr><td><code>RerankThreshold</code></td><td>0.2</td><td>重排分数下限</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h4 style="font-size:14px;margin-bottom:8px;color:var(--muted)">怎么理解这几个数</h4>
+            <ul class="tight">
+              <li><b>50 → 10</b>：召回要宽、精排要严。这是两阶段检索的经典比例。</li>
+              <li><b>k=60</b>：k 越大，排名差异被抹得越平。语料大时通常调大，小时调小。</li>
+              <li><b>0.7 / 0.3</b>：向量为主、关键词为辅。中文资料里把关键词权重调高常常有效，
+                  因为专有名词多。</li>
+              <li><b>阈值在融合前</b>：见上文，这是 RRF 的尺度决定的，不是随意选择。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="rerank" style="margin-top:16px">
+        <h3 style="font-size:16px;margin-bottom:12px">检索用到的技术与可选后端</h3>
+        <table>
+          <thead><tr><th style="width:22%">能力</th><th style="width:28%">本机实现</th><th>可选后端（同一接口，可替换）</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>向量检索</b></td>
+              <td>PostgreSQL + pgvector（<code>halfvec(1024)</code> + HNSW）</td>
+              <td>OpenSearch / Elasticsearch、Qdrant、Milvus、Weaviate、Doris、SQLite、腾讯向量库</td>
+            </tr>
+            <tr>
+              <td><b>关键词检索</b></td>
+              <td>ParadeDB（与向量同库，事务一致）</td>
+              <td>同上各引擎各自的原生全文检索</td>
+            </tr>
+            <tr>
+              <td><b>图谱检索</b></td>
+              <td>Neo4j</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td><b>重排</b></td>
+              <td>满足 <code>/rerank</code> 契约的本地服务</td>
+              <td>任意重排服务 / 跨编码器模型 / 大模型打分</td>
+            </tr>
+            <tr>
+              <td><b>联网搜索</b></td>
+              <td>SearXNG</td>
+              <td>Bing、Google、Tavily、DuckDuckGo、百度、智谱等</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:10px">
+          这种「一套接口、多种后端」的设计，意味着换向量库不需要改业务代码，只换配置。
+          对本机来说，选 Postgres 的好处是<b>向量、关键词、业务数据在同一个事务里</b>，
+          不会出现「入库成功了但索引没建上」的不一致。
+        </p>
+      </div>
+
+      <div class="card" id="retrieve-tech" style="margin-top:16px">
+        <h3 style="font-size:16px;margin-bottom:10px">实际发出的向量检索 SQL（本机 Postgres 引擎）</h3>
+        <div class="formula g">SELECT … , embedding::halfvec(1024) &lt;=&gt; $1::halfvec(1024) AS distance
+FROM   embeddings
+WHERE  …
+ORDER  BY embedding::halfvec(1024) &lt;=&gt; $1::halfvec(1024)
+LIMIT  …          -- 内层放大取数，保证 HNSW 的 ef_search 足够
+…
+ORDER  BY distance ASC
+LIMIT  …          -- 外层才是真正的 TopK</div>
+        <ul class="tight" style="margin-top:12px">
+          <li><code>&lt;=&gt;</code> 是 pgvector 的<b>余弦距离</b>算子，越小越相似。</li>
+          <li>用 <code>halfvec</code>（半精度）而非全精度，<b>索引体积减半、检索更快</b>，精度损失对检索排序几乎无感。</li>
+          <li>走的是 <b>HNSW 近似最近邻索引</b>，所以 ORDER BY 的表达式必须和索引表达式完全一致，
+              否则索引失效退化成全表扫描——这也是代码注释里特意强调的一点。</li>
+          <li>「内层放大 LIMIT + 外层真 LIMIT」两层写法，是为了让 HNSW 有足够候选可挑。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= 5. 关系 ================= -->
+    <section id="relation">
+      <div class="sec-head"><span class="kicker">05</span><h2>入库与检索是什么关系</h2></div>
+      <p class="sec-sub">
+        这是整套架构里最值得理解的一点。它们不是「两个功能」，而是同一条知识管线的
+        <b>生产端</b>与<b>消费端</b>——入库负责把所有昂贵的计算前置，检索负责在毫秒级把它取出来用。
+      </p>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="rel">
+          <div class="col">
+            <p class="hd">写链路 · 入库（重计算，可异步）</p>
+            <div class="idx w"><b>向量</b><span>每个分块一条 1024 维向量</span></div>
+            <div class="idx w"><b>关键词倒排</b><span>BM25 全文索引</span></div>
+            <div class="idx w"><b>知识图谱</b><span>实体节点 + 关系边</span></div>
+            <div class="idx w"><b>生成的问题</b><span>Doc2Query 附加检索入口</span></div>
+            <div class="idx w"><b>Wiki 页面</b><span>摘要 / 实体 / 概念页 + 互链</span></div>
+            <div class="idx w"><b>图片文本</b><span>图中文字的识别与描述</span></div>
+          </div>
+
+          <div class="pivot">
+            <div style="font-size:12px;color:var(--dim);margin-bottom:6px">共同的原子单元</div>
+            <div class="big">分块 Chunk</div>
+            <div class="sub">chunk_id</div>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.7">
+              入库产出它<br>检索返回它<br>引用指向它
+            </div>
+            <div style="margin-top:12px;font-size:11.5px;color:var(--dim)">
+              父子分块 → 子块命中<br>父块还原给模型
+            </div>
+          </div>
+
+          <div class="col">
+            <p class="hd">读链路 · 检索（轻计算，必须同步）</p>
+            <div class="idx r"><b>查询改写</b><span>把提问变成适合检索的形式</span></div>
+            <div class="idx r"><b>查询嵌入</b><span>与入库同一个嵌入模型</span></div>
+            <div class="idx r"><b>双路召回</b><span>向量 + 关键词，各取 top 50</span></div>
+            <div class="idx r"><b>RRF 融合</b><span>按排名合并，免疫尺度差异</span></div>
+            <div class="idx r"><b>重排</b><span>50 精选到 10</span></div>
+            <div class="idx r"><b>上下文组装与生成</b><span>父块还原 + 图片文本 + 引用</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-bottom:18px">
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:9px">四个不对称，决定了它们必须分开设计</h3>
+          <table>
+            <thead><tr><th style="width:24%">维度</th><th style="width:38%">入库</th><th>检索</th></tr></thead>
+            <tbody>
+              <tr><td>耗时</td><td>秒到分钟级</td><td>毫秒到秒级</td></tr>
+              <tr><td>同步性</td><td>异步队列，可重试</td><td>同步，不能排队</td></tr>
+              <tr><td>模型调用</td><td>每个分块、每张图都要调</td><td>只在改写和生成时调</td></tr>
+              <tr><td>失败影响</td><td>可局部失败、单独重试</td><td>直接导致用户拿不到答案</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:9px">一句话概括这层关系</h3>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+            <b>入库是把「理解文档」的成本一次性付清，检索是低成本地反复消费这份理解。</b>
+          </p>
+          <p style="color:var(--muted);font-size:13.5px;margin:0 0 12px">
+            如果没有入库阶段的预计算，每次提问都得现场读完所有文档——既慢又贵且必然塞不下。
+            这就是 RAG 相对于「把文档全塞进上下文」的根本优势所在。
+          </p>
+          <div class="formula">入库：贵、慢、一次性   →   产出索引
+检索：便宜、快、可重复 →   消费索引</div>
+        </div>
+      </div>
+
+      <div class="card" id="relation-couple">
+        <h3 style="font-size:17px;margin-bottom:8px">配置如何耦合：入库少做一样，检索就少一路</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">
+          知识库上有四个<b>索引开关</b>，它们直接决定入库会产出什么；而检索能用的召回路径，
+          严格受制于入库产出了什么。<b>这是一条单行道：检索期无法凭空多出一路召回。</b>
+        </p>
+        <table>
+          <thead><tr><th style="width:20%">入库时的开关</th><th style="width:32%">入库会产出</th><th>检索时才能用上</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>vector_enabled</code></td>
+              <td>分块向量（1024 维）</td>
+              <td>向量语义召回——关掉就等于丧失了语义匹配能力</td>
+            </tr>
+            <tr>
+              <td><code>keyword_enabled</code></td>
+              <td>BM25 全文索引</td>
+              <td>关键词字面召回——关掉则专有名词、编号容易漏</td>
+            </tr>
+            <tr>
+              <td><code>graph_enabled</code></td>
+              <td>实体与关系（Neo4j）</td>
+              <td>图谱召回 <code>entity_search</code>——关掉则「A 与 B 什么关系」类问题很难答</td>
+            </tr>
+            <tr>
+              <td><code>wiki_enabled</code></td>
+              <td>互相链接的百科页</td>
+              <td>Wiki 检索与链接扩散、<code>wiki_boost</code> 加权</td>
+            </tr>
+            <tr>
+              <td>问题生成配置</td>
+              <td>每个分块的若干「用户会问的问题」</td>
+              <td>多一路以「问法」为单位的召回入口，显著提升召回率</td>
+            </tr>
+            <tr>
+              <td>多模态开关 + 视觉模型</td>
+              <td>图片的图中文字与描述分块</td>
+              <td>图片内容可被检索到——否则 PPT 里的图表对系统完全不可见</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="warn" style="margin-top:14px">
+          <b>最重要的一条实践结论：</b>这些开关只影响<b>解析时刻</b>。
+          改完配置后，<b>已经入库的文档不会自动重算</b>——
+          必须对文档做一次「重新解析」，新配置才会生效。这是使用中最常见的困惑来源。
+        </div>
+      </div>
+
+      <div class="card" id="evidence" style="margin-top:16px">
+        <h3 style="font-size:17px;margin-bottom:8px">本机实测：一条真实文档走完两条链路</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">
+          以一个真实项目知识库为例（两篇咨询 PPT，共约 7 MB），四条索引管线全开，实测产出：
+        </p>
+        <div class="stat-row" style="background:none;padding:0">
+          <div class="stat"><b>1701</b><span>图谱关系数（1537 个实体节点）</span></div>
+          <div class="stat"><b>314</b><span>Wiki 页面（5541 条互链，孤儿页仅 5）</span></div>
+          <div class="stat"><b>每块 3 个</b><span>生成的问题作为额外检索入口</span></div>
+          <div class="stat"><b>每图 2 次</b><span>视觉模型调用（识别 + 描述）</span></div>
+        </div>
+        <div class="grid g2" style="margin-top:16px">
+          <div>
+            <h4 style="font-size:14px;margin-bottom:7px;color:var(--blue)">入库侧观察到的</h4>
+            <ul class="tight">
+              <li>图谱按配置的关系类型产出，前五类恰好是配置里指定的五种，
+                  说明抽取规则被真正执行了</li>
+              <li>作为「格式示例」用的无关领域文本<b>没有污染图谱</b>（泄漏节点数为 0）</li>
+              <li>图片理解会把每张图拆成<b>两个子分块</b>：一个装图中文字，一个装描述</li>
+              <li>装饰性小图会被过滤，纯色块返回空内容并被丢弃，不产生垃圾分块</li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="font-size:14px;margin-bottom:7px;color:var(--green)">检索侧观察到的</h4>
+            <ul class="tight">
+              <li>向量、关键词双路召回后经 RRF 融合，再重排，最终取 top 10 进上下文</li>
+              <li>每个回答都能回指到具体文档与分块</li>
+              <li>Agent 模式下可自主决定是否补充联网搜索，并把结果作为引用一并返回</li>
+              <li>全链路在 Langfuse 上可见：每次模型调用的耗时与 token 用量都可追溯</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p style="margin:0">
+        本页技术细节来自对仓库源码与实际运行系统的核对：
+        入库链路（解析引擎路由、docreader 职责边界、分块与父子分块、四路扇出、图片双重调用）、
+        检索链路（事件阶段枚举、RRF 公式与默认权重、pgvector 实际 SQL、重排契约、引擎矩阵）
+        均为逐一验证后的结论；实测数据取自本机真实知识库的图数据库与 Wiki 统计。
+      </p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+// 侧栏高亮：滚动时标记当前章节
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.sidebar a'));
+  var targets = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function onScroll(){
+    var y = window.scrollY + 120, best = -1;
+    targets.forEach(function(t, i){ if(t && t.offsetTop <= y) best = i; });
+    links.forEach(function(a, i){ a.classList.toggle('active', i === best); });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>

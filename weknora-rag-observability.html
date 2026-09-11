@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="QPFsVpwoLWfjQ49XVX9NVG">
+<head data-page-node-id="uwgeiyxb2auQbZ6qB9wc2l">
+<meta charset="UTF-8" data-page-node-id="6fTcEH5UgMTOekz0RfmnsA" />
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="B9LMFrWjZMcSYKKGwnEJeY" />
+<title>WeKnora RAG 调用链路 · 可观测性实测</title>
+<style>
+  :root{
+    --bg:#0a0e15; --bg2:#0e131c; --panel:#131a25; --panel2:#18202d;
+    --line:#222c3a; --line2:#2c3849;
+    --ink:#e8eef7; --ink2:#9aa8bd; --ink3:#67748a;
+    --blue:#4c8dff; --cyan:#22c9d6; --green:#2fd39a; --amber:#ffb020;
+    --purple:#a97bff; --red:#ff5d6c;
+    --mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.65}
+  body{padding:0 0 80px}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+  a{color:var(--blue);text-decoration:none}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:56px 0 36px;border-bottom:1px solid var(--line);
+    background:radial-gradient(900px 340px at 12% -10%,rgba(76,141,255,.18),transparent 70%),
+               radial-gradient(700px 300px at 88% 0%,rgba(169,123,255,.13),transparent 70%)}
+  .tagline{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cyan);margin:0 0 14px}
+  h1{font-size:34px;line-height:1.25;margin:0 0 12px;font-weight:700;letter-spacing:-.02em}
+  .sub{color:var(--ink2);font-size:15px;max-width:760px;margin:0 0 26px}
+  .sub code{font-family:var(--mono);background:var(--panel2);padding:1px 6px;border-radius:5px;
+    font-size:12.5px;color:var(--cyan);border:1px solid var(--line)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:8px}
+  .stat{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px}
+  .stat .v{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .stat .k{font-size:12px;color:var(--ink3);margin-top:2px}
+  .stat.g .v{color:var(--green)} .stat.b .v{color:var(--blue)} .stat.a .v{color:var(--amber)}
+  .stat.p .v{color:var(--purple)}
+
+  h2{font-size:20px;margin:52px 0 6px;font-weight:650;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:10px}
+  h2 .n{font-family:var(--mono);font-size:12px;color:var(--bg);background:var(--blue);
+    width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .lead{color:var(--ink2);font-size:14.5px;margin:0 0 20px;max-width:820px}
+
+  /* ---------- layers ---------- */
+  .layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .layer{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;
+    position:relative;overflow:hidden}
+  .layer::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--blue)}
+  .layer.l2::before{background:var(--purple)}
+  .layer.l3::before{background:var(--amber)}
+  .layer h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .layer .badge{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:20px;
+    border:1px solid var(--line2);color:var(--ink2);letter-spacing:.04em}
+  .layer .on{color:var(--green);border-color:rgba(47,211,154,.45);background:rgba(47,211,154,.1)}
+  .layer p{margin:10px 0 0;font-size:13.5px;color:var(--ink2)}
+  .layer ul{margin:10px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+  .layer li{margin:4px 0}
+  .layer code{font-family:var(--mono);font-size:12px;color:var(--cyan);background:var(--bg2);
+    padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+
+  /* ---------- waterfall ---------- */
+  .wf{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 22px 14px;margin-top:6px}
+  .wf-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;
+    padding-bottom:14px;border-bottom:1px dashed var(--line);margin-bottom:16px}
+  .wf-head .t{font-family:var(--mono);font-size:12.5px;color:var(--ink2)}
+  .axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
+    color:var(--ink3);margin:0 0 12px 232px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:212px 1fr;gap:14px;align-items:center;
+    padding:9px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+  .row:hover{background:var(--panel2)}
+  .row.open{background:var(--panel2)}
+  .rlabel{display:flex;align-items:center;gap:9px;min-width:0}
+  .rlabel .nm{font-family:var(--mono);font-size:12.5px;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;color:var(--ink)}
+  .rlabel .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .track{position:relative;height:24px;background:var(--bg2);border-radius:6px;border:1px solid var(--line)}
+  .bar{position:absolute;height:100%;border-radius:5px;opacity:.92;
+    display:flex;align-items:center;justify-content:flex-end;padding-right:8px;
+    font-family:var(--mono);font-size:11px;color:rgba(6,10,16,.85);font-weight:600;white-space:nowrap}
+  .bar.sp{background:repeating-linear-gradient(45deg,#33415a,#33415a 6px,#3b4a66 6px,#3b4a66 12px)}
+  .ep{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:6px}
+
+  .detail{display:none;grid-column:1 / -1;margin:2px 0 4px 226px;padding:12px 14px;
+    background:var(--bg2);border:1px solid var(--line);border-radius:10px;font-size:12.5px}
+  .row.open .detail{display:block}
+  .detail table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+  .detail td{padding:3px 0;color:var(--ink2);vertical-align:top}
+  .detail td:first-child{color:var(--ink3);width:150px}
+  .detail .tok{color:var(--green)}
+
+  /* ---------- evidence ---------- */
+  .ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:18px}
+  .card .hd{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;margin-bottom:8px}
+  .card .hd .ic{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;
+    justify-content:center;font-size:12px;font-family:var(--mono);color:#060a10;font-weight:700}
+  .card p{margin:0;font-size:13.5px;color:var(--ink2)}
+  .card code{font-family:var(--mono);font-size:12px;color:var(--cyan);background:var(--bg2);
+    padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+
+  /* ---------- code ---------- */
+  pre{background:#070b11;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#c9d6e8;margin:12px 0}
+  pre .c{color:var(--ink3)} pre .k{color:var(--purple)} pre .s{color:var(--green)}
+  .steps{counter-reset:s;margin:14px 0 0;padding:0;list-style:none}
+  .steps li{counter-increment:s;position:relative;padding:0 0 16px 40px;border-left:1px solid var(--line);
+    margin-left:11px}
+  .steps li:last-child{border-left-color:transparent;padding-bottom:0}
+  .steps li::before{content:counter(s);position:absolute;left:-12px;top:-2px;width:23px;height:23px;
+    border-radius:50%;background:var(--panel2);border:1px solid var(--line2);color:var(--blue);
+    font-family:var(--mono);font-size:11.5px;display:flex;align-items:center;justify-content:center}
+  .steps b{color:var(--ink)}
+  .steps p{margin:2px 0 0;font-size:13.5px;color:var(--ink2)}
+
+  .verdict{background:linear-gradient(135deg,rgba(47,211,154,.1),rgba(76,141,255,.07));
+    border:1px solid rgba(47,211,154,.32);border-radius:14px;padding:22px;margin-top:14px}
+  .verdict h3{margin:0 0 8px;font-size:16px;color:var(--green)}
+  .verdict p{margin:8px 0 0;font-size:14px;color:var(--ink2)}
+  .verdict b{color:var(--ink)}
+
+  .warn{background:linear-gradient(135deg,rgba(255,93,108,.1),rgba(255,176,32,.07));
+    border:1px solid rgba(255,93,108,.3);border-radius:14px;padding:20px;margin-top:14px}
+  .warn h3{margin:0 0 8px;font-size:15px;color:var(--red)}
+  .warn p,.warn li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .warn ul{margin:6px 0 0;padding-left:18px}
+
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:11.5px;color:var(--ink3);display:flex;
+    justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+    border:1px solid var(--line2);border-radius:20px;padding:3px 10px;color:var(--ink2)}
+  .pill i{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+</style>
+</head>
+<body data-page-node-id="t4nnARDYONKJuWdBrDBK7S">
+
+<header class="hero" data-page-node-id="Pb2sEPQPLEVfTcZD9iFyQV">
+  <div class="wrap" data-page-node-id="mWioDA6SUDszSCZ8ModO4F">
+    <p class="tagline" data-page-node-id="sYvMoEHHFjT6mDnIJjoK9m">WeKnora · Observability Trace</p>
+    <h1 data-page-node-id="aXiIk6mhTbg44IjvGJUjZl">RAG 调用链路，是能看见的</h1>
+    <p class="sub" data-page-node-id="EdP7vQnTCR5sNJinn4dDRS">
+      这是本机 WeKnora 的一次<strong data-page-node-id="5WGXN6muCBNda0mryrLPLV">真实问答</strong>（会话 <code data-page-node-id="HcnOoHDz6dOA6PBXrL4VSO">a3abce5c</code>）的完整链路剖面：
+      提问 → 查询改写 → 混合检索 → <strong data-page-node-id="jZodbyBlYJJ9CKn2JmIy2o">重排</strong> → 生成。<br data-page-node-id="14xCVM68oyj7Ds62THEESi">
+      结论先说：<strong data-page-node-id="WCzw23WFU4A5qxYMDN42b6">不需要重新设计任何工具</strong>，WeKnora 自带三层可观测性，Langfuse 已经在跑。
+    </p>
+    <div class="stats" data-page-node-id="hnr3GSOOAyu6n4deExMP2P">
+      <div class="stat b" data-page-node-id="LZKsDgo0LFT4z1kifxnNt5"><div class="v" data-page-node-id="xpZfgRMhou1RmcJhcnrnxX">8.51s</div><div class="k" data-page-node-id="BRi4yuUNVOzf8sUZ1lgWmA">端到端耗时</div></div>
+      <div class="stat g" data-page-node-id="2xyDKe53zM5IKv4MO9OCPP"><div class="v" data-page-node-id="EZJHP0dZdREpyCy2r592RZ">9</div><div class="k" data-page-node-id="z44bShJl6TFy5yB6dNka2C">管线阶段</div></div>
+      <div class="stat a" data-page-node-id="rBOpYumGHDdMQXkgex5urY"><div class="v" data-page-node-id="8oXyTsJ4QnW2y4PUUeTgWV">1.28s</div><div class="k" data-page-node-id="gtsJeNVfDlCC7tOdl3Z7ny">重排阶段（真跑了）</div></div>
+      <div class="stat p" data-page-node-id="Q7uGTsyqDAU5UjGmuAh5ZL"><div class="v" data-page-node-id="HWIpGvrqFWSXNEpW5JAB81">71</div><div class="k" data-page-node-id="oXcEdVy3pHAG6lVv8jvBfc">Langfuse trace 总数</div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" data-page-node-id="T6KbgQhgpzYpm4ks8b8xlw">
+
+  <!-- 1 -->
+  <h2 data-page-node-id="7B2QDm2aORbaCa7mU5Q2Xn"><span class="n" data-page-node-id="gIqqnrIWfOTwoCZZMWiLca">1</span>三层可观测性，全部现成</h2>
+  <p class="lead" data-page-node-id="P5FBOdVVuReA5XKH7SFKm2">想"看见 RAG 过程"，有三个层次，粒度从粗到细。它们不是二选一，而是互补的。</p>
+  <div class="layers" data-page-node-id="Xs7UaM2r7z7F3NzFdmIiV9">
+    <div class="layer" data-page-node-id="DPglVcH4gIcPuzjgfeUBE5">
+      <h3 data-page-node-id="1oVBlCFgSnPSSB7lMTMPaw">① 聊天界面时间线 <span class="badge on" data-page-node-id="Y3rIDEs6rX34jZHH2qcXKa">零配置</span></h3>
+      <p data-page-node-id="Hi2UcAsv8yPCqD3QeEjpxz">聊天回答上方会实时长出一棵<strong data-page-node-id="f1qhTMNIVuGaezQ6sY4nYp">步骤树</strong>：查询理解 → 知识检索 → 引用。</p>
+      <ul data-page-node-id="XrxzLxAvevLCsdaOSkvCHo">
+        <li data-page-node-id="GsgPVLVKb2zxzSEf9IgSFy">组件：<code data-page-node-id="l3jNHiDRFfGANtHJEPUDm8">RagPipelineProgress.vue</code></li>
+        <li data-page-node-id="AWQinn0IzKoTlTBcC8WXsw">数据源：SSE 事件流 <code data-page-node-id="N90e06JgBA1QF9GCZPR3IH">agentEventStream</code></li>
+        <li data-page-node-id="NuIWA6F8GzhVrzYHhlO9WF">点检索步骤 → 弹出<strong data-page-node-id="dRAlB8fBofiJ3aOdLdPsKD">引用抽屉</strong>（看到命中的原文块）</li>
+        <li data-page-node-id="ca9RAWzEI4ovR6mD2Lkylk">历史消息也保留（用引用重建时间线）</li>
+      </ul>
+    </div>
+    <div class="layer l2" data-page-node-id="8bE8qJYRvGmceuCuAdGyAV">
+      <h3 data-page-node-id="k7k3NRiHQtfAvItNdhX7v7">② Langfuse trace <span class="badge on" data-page-node-id="vFstrLiq2HM08IcjhXFNkQ">已在运行</span></h3>
+      <p data-page-node-id="u9mAToMjqJTeRWkbB6u4p8">每一步的<strong data-page-node-id="AQ5GPORFog7P7b4PktgW15">耗时 / token / 模型 / 入参出参</strong>，还能跨进程追踪入库任务。</p>
+      <ul data-page-node-id="8FJKvXOxgyCcrHzfrDU7Iz">
+        <li data-page-node-id="TEfHXwQoDLWJB8LnfIZD2j">地址：<code data-page-node-id="ochWFZZUhwI5XppVybIrvw">http://localhost:3000</code></li>
+        <li data-page-node-id="UQbVimP92EycyhtdEDc1h7">版本 v3.225.7，健康检查 <code data-page-node-id="hS5AbbWbJeGSvsUfMhMvjl">OK</code></li>
+        <li data-page-node-id="o67aVcEW7P2VkJU6MKkeei">已收 71 条 trace / 4164 个观测</li>
+        <li data-page-node-id="q7zhtkHCaJh4RxlmxM0322">span 树可下钻到 <code data-page-node-id="Gnrds85sj8bV35Iap2dOVp">rerank</code>、<code data-page-node-id="VBRqr7LAGGQpsKdYfJ71OA">embedding</code> 单次调用</li>
+      </ul>
+    </div>
+    <div class="layer l3" data-page-node-id="E7sCDspJTKi0qJKYfr1J9I">
+      <h3 data-page-node-id="DzF7J0CWHh7nFj1WUf11Zy">③ 原始事件流 <span class="badge" data-page-node-id="OuvbP2UaKA26G2VSLnKg1Y">给程序用</span></h3>
+      <p data-page-node-id="9YcCGfwe2CH5JH2nW7IB5m">MCP 的 <code data-page-node-id="NONjs6S1Gjjps9KoZjAp0N">chat</code> 返回 <code data-page-node-id="XnB6hFcREqDaYaZ8MFAKhE">_debug_events</code>；HTTP 层是 SSE。</p>
+      <ul data-page-node-id="f7ZH8xq6q4F7J9MYh2WWuO">
+        <li data-page-node-id="MXBTSk4r1Nz0MBUeCltb7e">事件类型：<code data-page-node-id="eh0dGJ6aV4xLI99xjfRAzz">query_understand</code> / <code data-page-node-id="0O0oSIpa15rFIMKBUCzfqX">knowledge_search</code> / <code data-page-node-id="PDe5ET46VblzYtRcB5ZibO">references</code> / <code data-page-node-id="6QVU6rkLuBCVRiQhjkjjjN">answer</code></li>
+        <li data-page-node-id="iWqO6vCaUNWGYINmCi9KUF">适合写脚本、做二次加工</li>
+        <li data-page-node-id="xbiyw5bZ9H2BWwrNOSDwiA">与 UI 时间线同源</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <h2 data-page-node-id="EGiWdS5VSYE7CwRk3BA2Fu"><span class="n" data-page-node-id="e0OKry8i0yjHWFhk0DCVkK">2</span>一次真实调用的瀑布图</h2>
+  <p class="lead" data-page-node-id="EYFLDI5FFTLHJQlOyKFY0j">
+    下面是本次问答复现的 Langfuse trace（<code data-page-node-id="gJShjzu0NQYGLFCxfqEDsZ">7b150cef…</code>）。点的每一条都能展开看模型与 token。
+    灰条纹表示该阶段内部还有并行子调用。
+  </p>
+
+  <div class="wf" data-page-node-id="5YUc6rfEroKyO9ZMEzoMKg">
+    <div class="wf-head" data-page-node-id="RkjFgFIxBMfRxbUUFVk5nP">
+      <span class="t" data-page-node-id="72Qnwk4YiphqcweSEyxEGV">POST /api/v1/knowledge-chat/:session_id</span>
+      <span class="pill" data-page-node-id="ItNdNVVFWGghug0pswhVeR"><i data-page-node-id="dsPRURG57MrDxG8liLTxG9"></i>latency 8512 ms · 9 stages · 5 model calls</span>
+    </div>
+    <div class="axis" data-page-node-id="BSpBTkTH4cblNogBErpFgd"><span data-page-node-id="khRESiNkBZbNFCblKUw6vd">0s</span><span data-page-node-id="5evSDj6mA51P4dYGOEwFvj">2.1s</span><span data-page-node-id="W243CJR52Wf0YvNOJnDFG0">4.3s</span><span data-page-node-id="asKNAf2Mf0JhXANiAVPlz6">6.4s</span><span data-page-node-id="LisBxwQNKncprB6GjCBZGg">8.5s</span></div>
+    <div id="wf" data-page-node-id="ENxyCP2vKn4fDJBhQCsFHq"></div>
+  </div>
+
+  <!-- 3 -->
+  <h2 data-page-node-id="UyU84B2axICNPqZqycXyv0"><span class="n" data-page-node-id="81voZDRR2ZDsQnMGf4FvXl">3</span>三条铁证：RAG 真的在干活</h2>
+  <div class="ev" data-page-node-id="RtLjYK0nQ6ccIFAVrlKgYu">
+    <div class="card" data-page-node-id="4lsAtdGECEJBLJvTwGaEu6">
+      <div class="hd" data-page-node-id="GCQzgAHKECWWyL2UO5JMTi"><span class="ic" style="background:var(--green)" data-page-node-id="5vYFci3g1HdHHleUZCwDRu">✓</span>重排阶段真实执行</div>
+      <p data-page-node-id="E1vyqtPGELi7NA6gN7YVC7">trace 里出现 <code data-page-node-id="ucXUQKz97abtx6XKnEGuBa">pipeline.chunk_rerank → rerank [GENERATION] model=llm-rerank</code>，耗时 1284ms、消耗 2193 tokens。
+      这是<strong data-page-node-id="OwIAJZm9McIO3Tbq6lDpQx">旧版从没有过的</strong>——旧版本 chat 路径每次都跳过重排。等于说：检索出的候选块，被逐个重新打过分。</p>
+    </div>
+    <div class="card" data-page-node-id="NWX6EbiUmJkMXM6TKNAoBu">
+      <div class="hd" data-page-node-id="AXysMsiP7aDnigP2A64FYJ"><span class="ic" style="background:var(--blue)" data-page-node-id="4HHAM2SCNTFPxh9qVDySqB">↻</span>查询被改写后才去检索</div>
+      <p data-page-node-id="LDwl0tjUGFuG74b6fcdsFy"><code data-page-node-id="PoirXpC7WiGSkSAs8eq1GE">pipeline.query_understand</code> 下挂了 2 次 <code data-page-node-id="wLBNGrAoEgdZUmzBbBZjKm">chat.completion</code>（deepseek-chat，2338+239 tokens）。
+      说明系统先把口语问题改写成检索友好的查询，<strong data-page-node-id="kSwmcufCirFAXIJBBc7FEh">才</strong>交给检索引擎——这是纯 LLM 直答不会做的事。</p>
+    </div>
+    <div class="card" data-page-node-id="EGjC2pgDhk7cQL1teahbAr">
+      <div class="hd" data-page-node-id="afJBHDaGhy2P35y5Ih8sOB"><span class="ic" style="background:var(--amber)" data-page-node-id="w1rA8azR768YXgFB9Vu5kY">◎</span>答案逐块可溯源</div>
+      <p data-page-node-id="VaIrKzHP2agWo8KHVm1K6i">回答里嵌入 <code data-page-node-id="UwQIzvjGWW426AiIWjwjFa">&lt;kb doc="…" chunk_id="…"&gt;</code>。本次命中 <strong data-page-node-id="OxDYgoNIJTSQusZsi9UG1o">5 个块</strong>，覆盖 2 篇文档、
+      4 种块类型（<code data-page-node-id="hAltMjDN94bKsxpK15xNyG">text</code> / <code data-page-node-id="mCjairOKw9bHkFp7Egyh3y">summary</code> / <code data-page-node-id="lMwVq9nNLEfkBe8vcDwfOB">table_column</code> / <code data-page-node-id="fYKcRncpXW8GCmbmI1aXYt">table_summary</code>），
+      score 均为 1。数字（3860 万 / 12 个月 / 238,000 元）与原文逐字一致。</p>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <h2 data-page-node-id="6y27EHKahu8OZswVuX0vh7"><span class="n" data-page-node-id="7miMdQHbBkpzrStS1tQ6dZ">4</span>怎么自己看到（三种方式）</h2>
+  <p class="lead" data-page-node-id="xAW0x3iVU1PlWZuQm6xkMy">按"想看到什么"选。做演示推荐 A，做排查推荐 B。</p>
+
+  <h3 style="font-size:15px;margin:18px 0 4px" data-page-node-id="51TICjR1gMZid9CLmEfKkD">A. 界面时间线 —— 演示时最有说服力</h3>
+  <ol class="steps" data-page-node-id="irhpOaymwwwe0DqB71dOx5">
+    <li data-page-node-id="CGOkdlHKRWsWHqQyFqOwBe"><b data-page-node-id="gRCmYQ78Nz0WRP627zSA2x">打开 WeKnora 网页</b><p data-page-node-id="t6hDbAfP2lOaGFKwYjtDGq">登录后进入任一知识库的聊天。</p></li>
+    <li data-page-node-id="aI6qaCMYHfqU8CwsbCPb4a"><b data-page-node-id="X1AsYhBG2TCVGkobFHHV2i">先确认当前是 RAG 模式</b><p data-page-node-id="rtDgOs8iuU6l3xGBxgm8lm">RAG / 快速问答模式下才会出现检索步骤；Agent 模式走的是另一套（工具调用）展示。</p></li>
+    <li data-page-node-id="3DskQIv9nngCRlpNwzb8yE"><b data-page-node-id="yHBpFAp2n8CWB588yIi4ne">随便问一个只有文档里才有的问题</b><p data-page-node-id="UEiQHewv4pjjvOu5gag43E">例如"星海园区的总预算是多少"。回答上方的步骤树会<strong data-page-node-id="sOXSDJmTZ2wkkakArpHsj5">边生成边长</strong>。</p></li>
+    <li data-page-node-id="F0yvHraT2HuggS1hG0B1fu"><b data-page-node-id="DwfGkJwUIsV1scfqABQIJD">点"知识检索"那一步</b><p data-page-node-id="2iM8NhoTibAKYU2Ix1CJjl">右侧滑出引用抽屉，能看到命中的原文块与来源文档——这就是"答案从哪来"。</p></li>
+  </ol>
+
+  <h3 style="font-size:15px;margin:26px 0 4px" data-page-node-id="hnB01COLKCLgnniVt744A5">B. Langfuse —— 排查与量化</h3>
+  <ol class="steps" data-page-node-id="8tMl5vhOltkTqBt3hz3H0m">
+    <li data-page-node-id="BWJLb4Ao8WGHD22IumxBwY"><b data-page-node-id="WLm5PijBUaQ47wRjrKDQAw">浏览器打开 <code style="font-family:var(--mono);color:var(--cyan)" data-page-node-id="XvKyGOBurmY6bP4eQr6nox">http://localhost:3000</code></b>
+      <p data-page-node-id="GEnkiXLVBaZjLW0VmqQh08">自建实例，账号在 <code data-page-node-id="7KfZLoiDd2osJBo906HXIo">.env</code> 里（<code data-page-node-id="ZPNU9eEjZEnnYANTVZa5tR">LANGFUSE_INIT_USER_EMAIL</code>）。</p></li>
+    <li data-page-node-id="kqcen6Gqq6NNyI1HvmsRVz"><b data-page-node-id="jnvm5Sgi2zu4Ufkrb3wL5p">进 Traces，按 sessionId 过滤</b><p data-page-node-id="SFg4Tw6rc4pTvuUf0Ogdy6">每条 <code data-page-node-id="BJ35j0DYXWlGysp0IJK0Tu">POST /api/v1/knowledge-chat/:session_id</code> 就是一次问答。</p></li>
+    <li data-page-node-id="oa0SeNceyn0747vRqylh1s"><b data-page-node-id="8uk8EgLQV5aDQYGL94z6Dh">展开树，看每个 span</b><p data-page-node-id="22xMDyMay54R8JsE8NdyZI">耗时、token、模型一目了然；点 <code data-page-node-id="BfMPw4Zc07apb2Xtb4s30C">rerank</code> 能看它给每个候选块打的分。</p></li>
+  </ol>
+
+<pre data-page-node-id="qlhgbG1yOTvHykDWVqSQBq"><span class="c" data-page-node-id="kd3axsA6X9MqjnRY9HLmy1"># 不想开浏览器？命令行直接拉 trace（已验证可用）</span>
+<span class="k" data-page-node-id="vhzJ28Q60RqlDhQTzmmzxI">export</span> PK=pk-lf-...  SK=sk-lf-...
+curl -s -u <span class="s" data-page-node-id="ZYp8j3l7zUMF9M9Lk7nWpt">"$PK:$SK"</span> <span class="s" data-page-node-id="EzEVE0LCDxBUTrJreAD2jW">"http://localhost:3000/api/public/traces?limit=5"</span>
+<span class="c" data-page-node-id="FnhOu9UkjJB0pmHEX3aYoh"># 或只取某次问答的完整树</span>
+curl -s -u <span class="s" data-page-node-id="YX8GghjHLJRLpxZOkRDvqF">"$PK:$SK"</span> <span class="s" data-page-node-id="26iWOPLtzJo0qtfrhEOLRW">"http://localhost:3000/api/public/traces/&lt;trace_id&gt;"</span></pre>
+
+  <h3 style="font-size:15px;margin:26px 0 4px" data-page-node-id="Czkj3g61r8MMDRFgQDtXMq">C. 原始事件流 —— 给脚本用</h3>
+<pre data-page-node-id="cWD18IS69GnG8VbTcPKfpM"><span class="c" data-page-node-id="ISTIxBwaCW7d4hoJqbMTPs"># MCP 的 chat 工具返回值里带 _debug_events（本次实测）</span>
+agent_query → tool_call(query_understand) → tool_call(knowledge_search)
+            → references → answer(流式碎片) → complete
+
+<span class="c" data-page-node-id="9PZCZhsTpN63o9qG0Pr5q8"># HTTP 层是 SSE：POST /api/v1/knowledge-chat/{session_id}</span>
+<span class="c" data-page-node-id="jtiD6gbwHONGQyZk2MNMPu"># 事件类型见 frontend/src/composables/useChatStreamHandler.ts</span></pre>
+
+  <!-- 5 -->
+  <h2 data-page-node-id="loea25AFyujo4OcUZ6Ft0u"><span class="n" data-page-node-id="vbmwqu2VFrlklyh7BpWnq4">5</span>"证明 RAG 有用"该拿什么比</h2>
+  <p class="lead" data-page-node-id="WlZf6Sbb4KCZ10FNBnE13V">光看链路跑通还不够。要让"有用"成立，得拿出<strong data-page-node-id="JcTu87A7tDa82jpLyjoe7j">对照</strong>。三个最省力的实验：</p>
+  <div class="ev" data-page-node-id="8ZaxEBdHkkl0yflMrFtUrX">
+    <div class="card" data-page-node-id="DmEDaC4blvY4u58c7IPCif">
+      <div class="hd" data-page-node-id="xbsIgPoy1Ga9RmyveqoqjU"><span class="ic" style="background:var(--blue)" data-page-node-id="eHET99u4QCoJ3OhDYlC74Y">1</span>问文档外的知识</div>
+      <p data-page-node-id="5quzaC574qyGlFV2LfeZiv">问一个库里根本不存在的实体（如"AI 训练芯片"），RAG 会明确答"未找到"并给出相邻信息，<strong data-page-node-id="xr4PeGFDp7rywwhV2IQ6CU">而不是编</strong>。这是防幻觉的直接证据。</p>
+    </div>
+    <div class="card" data-page-node-id="sz3dniKDylefrnkupZ9Sdd">
+      <div class="hd" data-page-node-id="XNsAqzD2agIB5lDCgACDqm"><span class="ic" style="background:var(--purple)" data-page-node-id="LQDixo1qhyRxkkBG5IN91s">2</span>问内部专有数字</div>
+      <p data-page-node-id="GI5l4EqwznBlOZelxsfenZ">问"总预算""设备单价"这类 LLM 无从得知的值，RAG 能给出<strong data-page-node-id="6WMlYqGZxStI3CV3gQbnZC">带 chunk_id 溯源</strong>的精确答案。纯 LLM 只能瞎猜。</p>
+    </div>
+    <div class="card" data-page-node-id="IXAdBgylgLlvXCbufRgE5n">
+      <div class="hd" data-page-node-id="k3iyV4czOKntu8FosVVglM"><span class="ic" style="background:var(--green)" data-page-node-id="VFdar4LVeAhmlBoxnKtP7v">3</span>看引用得分与重排</div>
+      <p data-page-node-id="ZbzlymSP0Vh0NpwFXe4xCa">在 Langfuse 里对比 <code data-page-node-id="yB8IIXNbKEnam6NqNGIzcn">retrieve</code> 的候选集与 <code data-page-node-id="iS8leBNzFZLZS5QZKfZFua">rerank</code> 之后的排序——重排把相关的顶上来，<strong data-page-node-id="GbU4RhhjPfXeUVPJuAybYI">顺序变了</strong>，这就是重排的价值。</p>
+    </div>
+  </div>
+
+  <div class="verdict" data-page-node-id="yJQNzmEFOM8TDKXzzc00HZ">
+    <h3 data-page-node-id="I7HBRYMxREGKxxH0389tde">结论</h3>
+    <p data-page-node-id="qFCzJqz9nUBm0jmdDmFpdk"><b data-page-node-id="l3ylaEDGAIECf4SXR03hIe">不用改任何工具。</b> 你要的"看见 RAG 过程"，WeKnora 已经内置：日常演示用界面时间线，量化排查用 Langfuse，
+    写脚本用 SSE / <code data-page-node-id="JmDSFO92yu9sUKwViNXeew">_debug_events</code>。<b data-page-node-id="aIBDszfFmZHw8e8iQMkscR">Langfuse 不是可有可无的装饰</b>——它是唯一能把"检索了几路、重排花了多久、
+    每步烧了多少 token、跨进程的入库任务挂在哪"一次性摊开的地方。</p>
+  </div>
+
+  <div class="warn" data-page-node-id="hw3KnWUo4CuU4ZKWkd3f1j">
+    <h3 data-page-node-id="StpkkT6SVj18l9CszVDZbL">⚠️ 顺带发现一个必须知道的状态变更</h3>
+    <p data-page-node-id="fEJf0iO6PkMAcvUnanQtDr">运行中的 app 已经<strong data-page-node-id="UawVkjXkFlGFeEcLb9HS2Y">不是官方 v0.8.0 镜像</strong>了。现在 <code data-page-node-id="0u1mx1YN2tkrRDluKVysqm">/system/info</code> 返回：</p>
+    <ul data-page-node-id="xPDlMtUKgtAnbbCRD8vQEE">
+      <li data-page-node-id="D0041vCEhEyqPau4eHs71E"><code data-page-node-id="1fXQuVtvwonBFpuAnawjit">version = v0.7.1</code>，而 <code data-page-node-id="Bm2BHu7Yzp30elpPFIkg9i">commit_id / build_time / go_version</code> 全是 <code data-page-node-id="20ksHGsI4WdLrMoW9Vzhhk">unknown</code></li>
+      <li data-page-node-id="nkhTE3QmmCNDHdchZQYjWW">启动时间 <code data-page-node-id="dpUQnM1mY3NuFJ6feUKnGB">2026-09-10T10:26:07Z</code>（北京时间 18:26）</li>
+    </ul>
+    <p data-page-node-id="XXEQ5oGGKw2CEzIfgOU9Sz">这是<strong data-page-node-id="bODqZ2z1KnZWgwMjV6yK9I">用本地源码编译出的二进制被部署上去了</strong>的特征（无 ldflags 注入 → 版本信息落空）。
+    好消息：之前一直"未生效"的 <b data-page-node-id="OKZxkAcwUmN3IOxq7uQA5U">rerank 兜底补丁已经真的在跑了</b>（Langfuse 为证）。
+    代价：app 基线从 <b data-page-node-id="XBXq9i5VQrDamVIZHafud2">v0.8.0 降级到了 v0.7.1</b>，而数据库已被 v0.8.0 迁移过（db_version 90）。
+    建议核实这次降级是否有意为之，并确认三处 Go 补丁的目标基线。</p>
+  </div>
+
+</main>
+
+<footer class="wrap" data-page-node-id="nOMG3CvvUVTDZN8urFOEYO">
+  <span data-page-node-id="GWShbrBkREgrn1uuCLEZJk">数据来源：Langfuse API trace 7b150cef… · 实测时间 2026-09-11</span>
+  <span data-page-node-id="Enre1V5tFcy1LGTloDLDv5">WeKnora · RAG Observability</span>
+</footer>
+
+<script>
+const STAGES = [
+  {name:"qa.setup",              ms:4,    color:"#3b4a66", detail:{说明:"会话初始化、鉴权、管线装配"}},
+  {name:"pipeline.load_history", ms:3,    color:"#3b4a66", detail:{说明:"加载该会话历史轮次，供多轮指代消解"}},
+  {name:"pipeline.query_understand", ms:1876, color:"#a97bff",
+    detail:{说明:"LLM 把口语问题改写成检索友好的查询",子调用:"chat.completion ×2 (deepseek-chat)",token:"2338 + 239 / 34 + 92"}},
+  {name:"pipeline.chunk_search_parallel", ms:3845, color:"#22c9d6",
+    detail:{说明:"混合检索并行执行：向量 + 关键词，RRF 融合",子调用:"embedding.embed ×4 (bge-m3) + retrieve ×3",token:"向量化查询文本"}},
+  {name:"pipeline.chunk_rerank", ms:1294, color:"#2fd39a",
+    detail:{说明:"对候选块逐个重打分并重排（本次是真实执行，非跳过）",子调用:"rerank (llm-rerank)",token:"2193 prompt tokens"}},
+  {name:"pipeline.chunk_merge",  ms:7,    color:"#4c8dff", detail:{说明:"合并去重、拼装最终送入 prompt 的上下文"}},
+  {name:"pipeline.into_chat_message", ms:0, color:"#4c8dff", detail:{说明:"组装 chat message 结构"}},
+  {name:"pipeline.filter_top_k", ms:0,    color:"#4c8dff", detail:{说明:"按 Top-K 截断最终引用集"}},
+  {name:"chat.completion.stream", ms:1374, color:"#ffb020",
+    detail:{说明:"流式生成最终答案，逐 token 推给前端",子调用:"chat.completion.stream (deepseek-chat)",token:"3374 / 243"}},
+];
+const TOTAL = 8512;
+let acc = 0;
+const wf = document.getElementById('wf');
+STAGES.forEach((s,i)=>{
+  const left = acc/TOTAL*100, w = Math.max(s.ms/TOTAL*100, 0.4);
+  acc += s.ms;
+  const row = document.createElement('div');
+  row.className='row';
+  row.innerHTML = `
+    <div class="rlabel">
+      <span class="dot" style="background:${s.color}"></span>
+      <span class="nm" title="${s.name}">${s.name}</span>
+    </div>
+    <div class="track">
+      <div class="bar ${s.ms<1?'sp':''}" style="left:${left}%;width:${w}%;background:${s.ms<1?'':s.color}">
+        ${s.ms>=140?s.ms+'ms':''}
+      </div>
+    </div>
+    <div class="detail">
+      <table>
+        <tr><td>阶段</td><td>${s.name}</td></tr>
+        <tr><td>耗时</td><td>${s.ms} ms（占 ${(s.ms/TOTAL*100).toFixed(1)}%）</td></tr>
+        ${s.detail.说明?`<tr><td>做什么</td><td>${s.detail.说明}</td></tr>`:''}
+        ${s.detail.子调用?`<tr><td>子调用</td><td>${s.detail.子调用}</td></tr>`:''}
+        ${s.detail.token?`<tr><td>token</td><td class="tok">${s.detail.token}</td></tr>`:''}
+      </table>
+    </div>`;
+  row.addEventListener('click',()=>row.classList.toggle('open'));
+  wf.appendChild(row);
+});
+</script>
+</body>
+</html>
