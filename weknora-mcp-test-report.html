@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="UX5FGhVkaeBllliPORiOh4">
+<head data-page-node-id="3fkXqifJvChF2FODObq04F">
+<meta charset="UTF-8" data-page-node-id="sKKVSDO6vWlDEHr9FM9xfU">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="dHFoKm0rs3oPpQD6fR3eGi">
+<title>WeKnora MCP 全功能测试报告</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --line: #e3e6ea;
+    --ink: #1a1d21;
+    --ink-2: #4a5158;
+    --ink-3: #7b838b;
+    --blue: #1f6feb;
+    --blue-bg: #eaf2fe;
+    --green: #1a7f4b;
+    --green-bg: #e6f6ec;
+    --amber: #9a6200;
+    --amber-bg: #fdf3e0;
+    --red: #b3261e;
+    --red-bg: #fdeceb;
+    --violet: #6a3bbd;
+    --violet-bg: #f1ebfd;
+  }
+  body {
+    margin: 0;
+    padding: 40px 24px 72px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 25px; margin: 0 0 6px; letter-spacing: -0.3px; }
+  .sub { color: var(--ink-3); font-size: 13px; }
+  .sub code { background: #eceff2; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  .verdict {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--green-bg); border: 1px solid #bfe6cd;
+    border-radius: 10px; padding: 16px 18px; margin: 0 0 26px;
+  }
+  .verdict .big { font-size: 30px; line-height: 1; }
+  .verdict b { color: var(--green); }
+
+  h2 { font-size: 16px; margin: 34px 0 12px; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+  h2 .n { color: var(--ink-3); font-weight: 500; margin-right: 6px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .card .k { font-size: 12px; color: var(--ink-3); }
+  .card .v { font-size: 22px; font-weight: 650; margin-top: 3px; letter-spacing: -0.5px; }
+  .card .d { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--panel);
+          border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f2f5; font-size: 12px; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td.num { color: var(--ink-3); font-variant-numeric: tabular-nums; width: 34px; }
+  code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 12px;
+         background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
+
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px;
+           font-weight: 600; white-space: nowrap; }
+  .b-pass { background: var(--green-bg); color: var(--green); border: 1px solid #bfe6cd; }
+  .b-warn { background: var(--amber-bg); color: var(--amber); border: 1px solid #f0dcb4; }
+  .b-info { background: var(--blue-bg); color: var(--blue); border: 1px solid #c6dcfb; }
+
+  .find { background: var(--panel); border: 1px solid var(--line); border-left-width: 3px;
+          border-radius: 8px; padding: 13px 16px; margin-bottom: 10px; }
+  .find.good { border-left-color: var(--green); }
+  .find.warn { border-left-color: #e0a53a; }
+  .find.info { border-left-color: var(--blue); }
+  .find h4 { margin: 0 0 5px; font-size: 13.5px; }
+  .find p { margin: 0; color: var(--ink-2); font-size: 13px; }
+  .find .ev { margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+  .find .ev code { font-size: 11.5px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .panel h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); }
+  .kv { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13px;
+        border-bottom: 1px dashed #eceff2; }
+  .kv:last-child { border-bottom: none; }
+  .kv span:first-child { color: var(--ink-3); }
+  .kv span:last-child { font-weight: 600; text-align: right; }
+
+  blockquote { margin: 0; padding: 10px 14px; background: #f0f4f8; border-left: 3px solid #b9c4d0;
+               border-radius: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 12.5px; }
+  .chip { background: #eef1f4; border: 1px solid var(--line); border-radius: 6px; padding: 3px 9px; }
+  .chip.on { background: var(--green-bg); border-color: #bfe6cd; color: var(--green); font-weight: 600; }
+  .arrow { color: var(--ink-3); }
+  footer { margin-top: 40px; color: var(--ink-3); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body data-page-node-id="AwgmRYEGUnDJDfaiagX4e5">
+<div class="wrap" data-page-node-id="wy3Jdh66gL8fA7dE4BwWSp">
+
+  <header data-page-node-id="OEKtVBU5v6CYHSDRmbQlGc">
+    <h1 data-page-node-id="2aMBZm673ATfX73XEHJYbd">WeKnora MCP 全功能测试报告</h1>
+    <div class="sub" data-page-node-id="hBo2mleBoTUQqSaqRBZcVc">
+      测试时间 2026-09-10 · 被测服务 <code data-page-node-id="IlIVkzCJ1OUR9e3JEf3wAj">weknora</code> v0.8.0 (commit 1edcd54) ·
+      API <code data-page-node-id="LkAGgpQA8EgyNDRlFzqfak">http://localhost:8080/api/v1</code> · MCP stdio（本机 venv）· 40 个工具
+    </div>
+  </header>
+
+  <div class="verdict" data-page-node-id="PyVByHrpgjpZ4j3ZBV35gY">
+    <div class="big" data-page-node-id="Ds3Fqcbpdd4GfZzeK5hQTG">✅</div>
+    <div data-page-node-id="jepZeUcweF6lNAduuvdY3r">
+      <b data-page-node-id="fxu4BZvVG0RmHlS6SewUlq">14 / 14 项功能全部通过</b><br data-page-node-id="ZDg6NZbi2EQLFf9FOwFdr8">
+      <span style="color:var(--ink-2);font-size:13px" data-page-node-id="h2UBKnhjjKqzmJmPECrox7">
+        从零新建知识库并导入 4 份自建文档（md / txt / csv），完整跑通「导入 → 解析 → 摘要 → 混合检索 → RAG 问答 → Agent 多步推理 → 知识图谱 → Wiki」全链路，答案经人工核对无误。
+      </span>
+    </div>
+  </div>
+
+  <h2 data-page-node-id="PTqnyB5eD4VDpUh3S0yE1b"><span class="n" data-page-node-id="dK2Qf6YheqwCPDuWKCQZ7t">01</span>测试对象与产出规模</h2>
+  <div class="cards" data-page-node-id="ma3baiYLBZ5TFmu0mqArXw">
+    <div class="card" data-page-node-id="LImzJOMLlDflsAe0XVEs7u"><div class="k" data-page-node-id="SbvcXdtHqj6AjDuAc7UsI5">新建知识库</div><div class="v" data-page-node-id="JVgn2cNMScHLiw0YjM1jx8">1</div><div class="d" data-page-node-id="T5cGLDSL74S3XIX4mAV8XF">星海园区功能测试库</div></div>
+    <div class="card" data-page-node-id="1o8sazy6zy0JHvKMVOE79r"><div class="k" data-page-node-id="WCHoE6b5DVmLm8uvfs6dCI">导入文档</div><div class="v" data-page-node-id="6IEnNKl8H36ckdhIUBTuK3">4</div><div class="d" data-page-node-id="45JhX7HQ0UbK4d8POpmqks">md ×2 · txt ×1 · csv ×1</div></div>
+    <div class="card" data-page-node-id="UMNz6AKBWObYAJN8fy2hTE"><div class="k" data-page-node-id="MrfJEp3xUikv8QrE3d3oYJ">文本分块</div><div class="v" data-page-node-id="eG2FRrh8PWlhKs4WOw3E7p">9</div><div class="d" data-page-node-id="eKk81giCw2BjfFk1sZOHMQ">正文 8 + 表结构 2，另每篇 1 摘要</div></div>
+    <div class="card" data-page-node-id="cowtGDvVt21aTSlAxLPmrB"><div class="k" data-page-node-id="FGsxZ8sGW8VCxikBczNJPd">图谱节点</div><div class="v" data-page-node-id="IJ9hvJyEyzqevklD2jArOI">120</div><div class="d" data-page-node-id="FX6BPPUVw3JhYVwk2LZrU1">Neo4j 关系 114 条</div></div>
+    <div class="card" data-page-node-id="9x4L3FZXeayRon2udoM09Q"><div class="k" data-page-node-id="evyVevEpgiUfieMFxISSo1">Wiki 页面</div><div class="v" data-page-node-id="DSFnL8LdHzbZQzBAeNNrdh">68</div><div class="d" data-page-node-id="w1TYPet7zlUAPgzh3xj7Wx">实体 44 · 概念 19 · 摘要 4 · 索引 1</div></div>
+    <div class="card" data-page-node-id="kIFN3iAK5ugNTWuzOj0nZW"><div class="k" data-page-node-id="WSXGXxB3AtJPCOrDF7nQ1Q">Wiki 链接</div><div class="v" data-page-node-id="Ese2ThghVnyEDFzpkzJ2vH">298</div><div class="d" data-page-node-id="Haf2RWLoQHHPQHFjtCBwgt">孤立页 0 · 健康分 100</div></div>
+  </div>
+
+  <h2 data-page-node-id="kZC0angB0XE91hzmp3TsBg"><span class="n" data-page-node-id="1LQvwyocCK2TcHJNB3siBq">02</span>测试素材（自建，含可精确核对的事实）</h2>
+  <table data-page-node-id="Ra5I28qd3sHe8kbgKP90Oo">
+    <thead data-page-node-id="xotIbjy5JVBLzKa9alRZ0G"><tr data-page-node-id="ZGq3u3SDgUubxLTVwUeB9D"><th data-page-node-id="8sHDITeJJ73ME2QclohOY9">文件</th><th data-page-node-id="tBGdLzd5nek2s7082zMnGm">大小</th><th data-page-node-id="f1sblYn5aLFtGs5gI5Amhz">格式/解析引擎</th><th data-page-node-id="Qc5H0GLCCWW82aM4QvwKDO">设计意图</th></tr></thead>
+    <tbody data-page-node-id="jJ9tRnFh2DZwVBvXDTKGXm">
+      <tr data-page-node-id="qIGOP3dnTnL3qNaTD5JYR1"><td data-page-node-id="lQ5xBBhQRuS9UkHfAvcgFZ">01_星海园区-项目概览.md</td><td data-page-node-id="oxkSJJ9EiKctBVq7h9QcM4">2,777 B</td><td data-page-node-id="fXzca0EyTRpTdgtddHO3Ss">md / builtin</td><td data-page-node-id="0VgJCu7bswGzZKiYSlHuBq">预算 3860 万、工期 12 个月、组织架构、6 个里程碑——用于核对精确数字</td></tr>
+      <tr data-page-node-id="qiYbQ7p5m0uUOjY54hLTaf"><td data-page-node-id="Bcluz7rEjUPJCHzdGX31Lo">02_星海园区-技术架构.txt</td><td data-page-node-id="2QRXEFBu9qxVFRpw4bJV9K">2,190 B</td><td data-page-node-id="Q23sMloTT2SnD2an1nKuWg">txt / simple</td><td data-page-node-id="rvbkMxTqiZvzd6HxCEF2cM">五层架构、技术选型、SLA 指标——用于核对专业术语与数值</td></tr>
+      <tr data-page-node-id="So3VYBgmNdz7LPcD2p3lag"><td data-page-node-id="xeJxbRCSH5KdvghXcawzjW">03_星海园区-设备清单.csv</td><td data-page-node-id="KNFfK5CnTenupTH3IO38VO">734 B</td><td data-page-node-id="V25bkErURUeAtaKXD7e7Yr">csv / simple</td><td data-page-node-id="7p2obuNKEmk4GNm8bDwNBk">10 项设备含数量/单价/小计——用于核对表格解析与金额汇总</td></tr>
+      <tr data-page-node-id="uODKRMrVdhqjkpJPNG5zwb"><td data-page-node-id="YuvXcPNfekqQAelG88EWwQ">04_星海园区-运维问答手册.md</td><td data-page-node-id="GnDxsu9tQR4cZWM1plplaI">2,722 B</td><td data-page-node-id="yFdLbS0AqiotloWcLh88TI">md / builtin</td><td data-page-node-id="Cg6whQDy5GR4l8hlD6H1lu">Q1–Q8 问答式，含跨文档联系人表——用于跨文档推理</td></tr>
+    </tbody>
+  </table>
+
+  <h2 data-page-node-id="86ECYBv8To55LjBkVIdmKJ"><span class="n" data-page-node-id="wyNsJZkyRJoFXu7DFUfrdR">03</span>逐项测试结果</h2>
+  <table data-page-node-id="Fk4CzOXiHtA5jzLeYAMEIH">
+    <thead data-page-node-id="Lw6b8o0CBvepNav20Luszc"><tr data-page-node-id="qvohWaW7aV1gFvmZeH39xh"><th data-page-node-id="ho5fxnCbxE6lypm7QVV1ws">#</th><th data-page-node-id="owC2Z9mi6zGRo6GiuUBdSN">功能</th><th data-page-node-id="p4DkTfPGDcBZhIBBZdM2m7">调用工具</th><th data-page-node-id="ZgYXQZA7BACPj6miXtpTWM">验证方式与观察</th><th data-page-node-id="IPrZai30QUyMITbCUknCS3">结果</th></tr></thead>
+    <tbody data-page-node-id="RgWbTsvUHwZwNn2PwBm9fi">
+      <tr data-page-node-id="1xQndorNzgBCfltQ6AFSGM">
+        <td class="num" data-page-node-id="XM9ILZJGH3cYFLpIFGYa0v">1</td><td data-page-node-id="TleQMyQwPIKBtjS3EHVvdI">知识库创建</td><td data-page-node-id="l3EaWBOKPxOniiAjWRvKGM"><code data-page-node-id="O5ETDN6oBjfGn3Z84mhoj5">create_knowledge_base</code><br data-page-node-id="qPCmtND5kByNj2LifPyzwR"><code data-page-node-id="w8G9wl1pIkZWymJPYi8lGv">get_knowledge_base</code></td>
+        <td data-page-node-id="oCJAlZzsIdBlIR7ZahrroB">建库返回 UUID；<code data-page-node-id="oCF5jGQyEOvZ5GV0OrJWA1">update_knowledge_base</code> 开启 graph + wiki，<code data-page-node-id="FW8aBmkiFqwF4X8ivfFHoz">extract_config.enabled</code> 自动置真</td>
+        <td data-page-node-id="AfZbk5H1a5qSmAdjZ22bKp"><span class="badge b-pass" data-page-node-id="RXHJItKwdfFz3l9yim4hzN">通过</span></td>
+      </tr>
+      <tr data-page-node-id="nCoqVh27TPGzAMLLpBLYWk">
+        <td class="num" data-page-node-id="8RU6XRbOQxkUxbn7tHkOmt">2</td><td data-page-node-id="W7Vi9CbWT7v8SlXsnWlN7U">文档导入</td><td data-page-node-id="HThU6ADgJ9ucQHvRanakyy"><code data-page-node-id="eParwP0JrGIcttJCx3JPxP">create_knowledge_from_file</code></td>
+        <td data-page-node-id="UuY3iScVtlZiXvJjZqWBdy">4 个<b data-page-node-id="i9lWwYiC2dUUtt3AhBMALh">本机 Windows 路径</b>文件全部上传成功，无路径拒绝、无跨容器问题</td>
+        <td data-page-node-id="HIOoGK2FpvndcU3XbzxLYM"><span class="badge b-pass" data-page-node-id="dkMiWipWqlvazF078xM0Cp">通过</span></td>
+      </tr>
+      <tr data-page-node-id="VzC6WxIvq6Xd58t1WJ5Zmi">
+        <td class="num" data-page-node-id="0qQMWbWvFFLpDOa7FeMDRW">3</td><td data-page-node-id="RdQhBJtJzXRaJXcirb3pvs">解析与分块</td><td data-page-node-id="TNvQ6zr50yjGrK6oINCZG4"><code data-page-node-id="UqrUSWxTHIdvofifcB1KhD">list_knowledge</code><br data-page-node-id="rulNmGq3kPMlKGNIMJxmeV"><code data-page-node-id="h17LgsSZlmLlSfqDZIkAYT">list_chunks</code></td>
+        <td data-page-node-id="R6bi1WniP9nDyIRNbh6luG">4 篇 <code data-page-node-id="U456OzJukFAOcVN7N1e2lY">parse_status=completed</code>；01 篇切为 2 个正文块（0–944 / 807–1330）+ 1 摘要块，重叠 137 字符</td>
+        <td data-page-node-id="97b5GMp2BE7lym4bOP3Aqi"><span class="badge b-pass" data-page-node-id="V7lYfiw7CCxIebeT8GQ663">通过</span></td>
+      </tr>
+      <tr data-page-node-id="TKVcpel2LNsJMp6E1ELSW8">
+        <td class="num" data-page-node-id="gwzD7AtoVN7GJj0tM9wun5">4</td><td data-page-node-id="WNz6JjFOlfyzxR3W5HnEFn">自动摘要</td><td data-page-node-id="BOpJl2WYbalnVUZaoFZXRA">（解析流水线）</td>
+        <td data-page-node-id="H4nrf8C0HoXBDEf9DZClrg">4 篇 <code data-page-node-id="ene84SDQmkfESFNwK1tIQN">summary_status=completed</code>，摘要准确复现预算、工期、里程碑等关键数字</td>
+        <td data-page-node-id="7ANS4engDzT67rhFxthXTS"><span class="badge b-pass" data-page-node-id="MINmPYHav6wiTnnyLhYoIo">通过</span></td>
+      </tr>
+      <tr data-page-node-id="malochoyvytDsfRXW8Xd5v">
+        <td class="num" data-page-node-id="Fs4zvauoggubPxHPgag7cG">5</td><td data-page-node-id="2k19TEEIkDRsy1GcbLitxW">表格智能解析</td><td data-page-node-id="gc1p8i5Le4pXA8iyEJGPHt"><code data-page-node-id="LHq29ArzULYzdZiEOBsMpo">hybrid_search</code> 返回块类型</td>
+        <td data-page-node-id="Y3FFFxRHgHxbBCdI2v04bR">CSV 额外产出 <code data-page-node-id="hwntRtzh01j6TaPQpYp1Jt">table_summary</code>（表结构语义）与 <code data-page-node-id="onCFN6RNxumtRZzAEZj8QM">table_column</code>（7 个字段的业务含义）两类块</td>
+        <td data-page-node-id="EKWwwzYtci1Z2jcWQJCRRI"><span class="badge b-pass" data-page-node-id="yH2wDbP8oLHpfBHThRzmI9">通过</span></td>
+      </tr>
+      <tr data-page-node-id="OUa4nPIHoSCDQSMNgeiVn7">
+        <td class="num" data-page-node-id="NrtM2HFmECjV6MHxDIpsfs">6</td><td data-page-node-id="3fPeqovXpKx21m3XLQTBwJ">混合检索</td><td data-page-node-id="oLXsOh7ACm6H1fDMPFyYTU"><code data-page-node-id="kUsHf1osfB3wgklEzrfYGM">hybrid_search</code></td>
+        <td data-page-node-id="OzciXbvLvrYRBGxYkprkZz">「总预算/建设周期」「P99 延迟」均命中正确块；返回 <code data-page-node-id="Fcyi7H2ICu3TXEwLnJyaxs">match_type</code> 0/1/2/4，摘要块与正文块同时召回</td>
+        <td data-page-node-id="EwKCHdokWYBpNYmLdzRfY8"><span class="badge b-pass" data-page-node-id="hnEpZ6GRaCFJN71LOFfYuf">通过</span></td>
+      </tr>
+      <tr data-page-node-id="YsVfpAduCnLpn8RG1A1ynD">
+        <td class="num" data-page-node-id="WSpRGb8ne0WK30HAJPxklF">7</td><td data-page-node-id="2nTffH6fqmlUM7dysr1FrO">RAG 问答</td><td data-page-node-id="idCFdyf7Pk8mVF8R6jNB1f"><code data-page-node-id="bS3l0uIosRUDs6HeAffhRR">create_session</code><br data-page-node-id="6GHcmN2eso2eNFd5sPN4rL"><code data-page-node-id="YdxrY33yPEvu6NjudCpXAW">chat</code></td>
+        <td data-page-node-id="a5Q13aoFnOFmK18t47H8R1">「总预算和建设周期」答 3860 万元 / 2026-03-01 至 2027-02-28 共 12 个月，全部正确并带 <code data-page-node-id="fjBdrcV7vBXCbfAEOjkble">&lt;kb&gt;</code> 溯源</td>
+        <td data-page-node-id="5YMOyLX7obhI0GnIwCrsxU"><span class="badge b-pass" data-page-node-id="9pQoCwXCBW3etxXfCF8vv5">通过</span></td>
+      </tr>
+      <tr data-page-node-id="6OoDMa8stOrWrLCTfDh8qB">
+        <td class="num" data-page-node-id="2JZHthuDbWzqzDS36mwznq">8</td><td data-page-node-id="vmCvqFewAUKMkt1u5PYVnq">防幻觉</td><td data-page-node-id="8cmKvYOZVm4sbSK76IiqCI"><code data-page-node-id="J01HMNV8fvjhcDsFuBx9Xy">chat</code></td>
+        <td data-page-node-id="VrPlE4Qun71kfuNIXxSdf3">问「AI 训练芯片型号」（文档中不存在）→ 明确回答<b data-page-node-id="l4AkvPOlvfENcPx9SpxlP1">未找到</b>，仅列出确有记载的 GPU 推理服务器作对照，拒绝编造</td>
+        <td data-page-node-id="1ueWz0pl23qC1c4T6FZ7Gb"><span class="badge b-pass" data-page-node-id="BNHTi4SSANzoKGKbZVh688">通过</span></td>
+      </tr>
+      <tr data-page-node-id="GDL5mX98YZlbtTl5maF32V">
+        <td class="num" data-page-node-id="cGbCcFk3bs6RvJlIOlcFgd">9</td><td data-page-node-id="8uMuO93ErG0ORxL3nKSbIS">Agent 多步推理</td><td data-page-node-id="EPWrMXy7WDZtZP737wtCgQ"><code data-page-node-id="SnAu2AUPsjDyzcao1k1S5X">agent_chat</code></td>
+        <td data-page-node-id="LBDzT21vegAmeg6D0FqG0r">「对比交付一部/二部」触发 6 次工具调用（grep_chunks ×2 → knowledge_search ×2 → list_knowledge_chunks ×2），输出对比表；台数 1,396 / 32、金额 2,260,080 / 2,712,000 元<b data-page-node-id="Qaoj5KX8Zc4B0U25u3faRN">经人工核算全部正确</b></td>
+        <td data-page-node-id="Gd1lFAMEQNvLDBAZwDmbje"><span class="badge b-pass" data-page-node-id="FcRBvKN5gMr6coyisr0z51">通过</span></td>
+      </tr>
+      <tr data-page-node-id="bky9ngT9ZK0IN2XEjbAK7s">
+        <td class="num" data-page-node-id="7Xlasyxityq0Vz33k5cevZ">10</td><td data-page-node-id="hNo5Ci7oiBh85UIPxTXbvh">Wiki 索引</td><td data-page-node-id="W1uU6m5WyXBLpacQaf959I"><code data-page-node-id="gNFQsQMv6VHF8lwCF0GPAd">wiki_index_view</code></td>
+        <td data-page-node-id="UREGEGKSvYCyWls5iten9n">按类型分组返回 44 实体 + 19 概念 + 4 摘要页，并自动生成多级分类路径（如「组织 / 承建方组织 / 交付二部」）</td>
+        <td data-page-node-id="RFYKe1RysiGYHrEyjdMNJL"><span class="badge b-pass" data-page-node-id="AKZiASIP0iR8eX3Hka2RDr">通过</span></td>
+      </tr>
+      <tr data-page-node-id="mCIibfTrUQbpUEeaXfBhe8">
+        <td class="num" data-page-node-id="fV1wyKLIRH6MLDbi9onYIB">11</td><td data-page-node-id="NybR5NKEJqx4AkZHYXTf4y">Wiki 检索与阅读</td><td data-page-node-id="WLPCZfuYFgzFcgpLpckexg"><code data-page-node-id="dnwDHvMYjigNVmvgXemd0U">wiki_search</code><br data-page-node-id="qjZSNAgh26thm5eVQzyA9A"><code data-page-node-id="pUzM33VvHFVQhBYUlPnZrF">wiki_read_page</code></td>
+        <td data-page-node-id="hyD5Xord10GTHSl7gylser">「交付二部」命中 10 页；页面正文<b data-page-node-id="DMnQA58SrMkZnZ5GvyAIa3">跨文档合并</b>了「项目概览」的 M1/M4 里程碑与「设备清单」的 3 项服务器设备，并带 <code data-page-node-id="c2SZKDmUMDYM8Vn6Cwl6lv">source_refs</code>/<code data-page-node-id="H04O8ebDErBd8wgXIThK1f">chunk_refs</code>/<code data-page-node-id="Qxguc8Q6MH7NSFovGULgrA">in_links</code>/<code data-page-node-id="mlotgGtM6WLo3rPJ1WV50C">out_links</code></td>
+        <td data-page-node-id="EdvA0k5CiXibNp6ibS8DPr"><span class="badge b-pass" data-page-node-id="KB66cWH6CK6QjEIsIG2jt7">通过</span></td>
+      </tr>
+      <tr data-page-node-id="KeNjIP2ojbYJ2hO9WOoJLb">
+        <td class="num" data-page-node-id="Z5Bp7tPh1yxZ3aWyfF4OJ2">12</td><td data-page-node-id="tsqBnJ2glVuxFYBVhEq0KT">Wiki 健康度</td><td data-page-node-id="IY7COY7NzE5BaO8wR4JWSh"><code data-page-node-id="YaKEXm9LhGZ3rrpRXXrnWt">get_wiki_stats</code><br data-page-node-id="aPvvAYE5UXsWBsVuDF11kC"><code data-page-node-id="hm2727iETWJALvKfKIcQhA">wiki_lint</code></td>
+        <td data-page-node-id="WFcYOKmEtejR2lzCBgBjjC">健康分 100，孤立页 0，298 条链接；仅 4 条 warning（摘要页无入链，属预期）+ 10 条建议级缺失交叉引用</td>
+        <td data-page-node-id="FAHgc6LTMIrFZD1t7Lc0DS"><span class="badge b-pass" data-page-node-id="HQpnG8ks40fBIjxNuoKWae">通过</span></td>
+      </tr>
+      <tr data-page-node-id="lsRIGwAUYVIbtEOVR0KYN9">
+        <td class="num" data-page-node-id="T0hE2zTXzLmWFo8PccTS7D">13</td><td data-page-node-id="kJ7HGAFQwYaSJTNu4y2oPz">知识图谱</td><td data-page-node-id="yoxQkvZzI2bnE9TfF5zE70"><code data-page-node-id="1MiyMQl98Kooq4vNesGdRw">update_extract_config</code> + Neo4j</td>
+        <td data-page-node-id="mR7hhHB1LGfEULzYI3zZOH">抽取 <b data-page-node-id="0OdHNiW57XkEkwGZjtpuS9">120 节点 / 114 关系</b>；关系类型 100% 落在配置白名单内（系统组件 52、组织 29、角色 20、交付物 7、项目阶段 6）</td>
+        <td data-page-node-id="6ZEESTFJVhBAY4al1jrcMo"><span class="badge b-pass" data-page-node-id="k9FWn7RRwcybuJ8wqpah1W">通过</span></td>
+      </tr>
+      <tr data-page-node-id="Y0wZXEwhTmF6CCdjsr9tEG">
+        <td class="num" data-page-node-id="Bx7MvAUJt99unWWJSZ4nD2">14</td><td data-page-node-id="2wca7hwVBDKypSQIUGVNJR">空间与模型管理</td><td data-page-node-id="PpEDAqG89DuHnbcDJDs4d0"><code data-page-node-id="6y1qobpvVpX4j2JewRAQah">list_tenants</code><br data-page-node-id="rxsM12FUhCVisfp4O24XGZ"><code data-page-node-id="ThK2BAn2BvheZoYub9mDPI">list_models</code></td>
+        <td data-page-node-id="DEPRayh47MEjmFQdH4JL1v">1 个工作空间（配额 10 GB，已用 719 KB）；4 个可用模型：bge-m3 / deepseek-chat / glm-4.6v / llm-rerank</td>
+        <td data-page-node-id="zSCNrYDG1JSK0WowZxUtqQ"><span class="badge b-pass" data-page-node-id="8QfUpRZWF2GE9DmgtRMDHw">通过</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 data-page-node-id="Dj9kGVBbsTCPwlRF9mHNrP"><span class="n" data-page-node-id="MAg06yc30uFpfSvdhHnmm5">04</span>检索链路与指标实测</h2>
+  <div class="grid2" data-page-node-id="Kc3MMKcRyLFVQEkNe2si1u">
+    <div class="panel" data-page-node-id="kqmLFR24dvYkBXTdj3cWBf">
+      <h4 data-page-node-id="qo5BP3saPBR9TbjxIRk6Xn">RAG 问答内部链路（来自 <code data-page-node-id="U0iHXNLNho5KvIwBom8TrT">_debug_events</code>）</h4>
+      <div class="flow" data-page-node-id="8T9ICcQo6ylOlkzDsXF9TH">
+        <span class="chip on" data-page-node-id="uaM1ElOiwFQzU3mcTOC27I">query_understand</span><span class="arrow" data-page-node-id="gydmrOfPbHenp7L9BM6e6t">→</span>
+        <span class="chip on" data-page-node-id="DLNC6WBxSAzp5Jq7pOxAXw">knowledge_search</span><span class="arrow" data-page-node-id="1KztlJVJhvSQ6FdBkrB9Ds">→</span>
+        <span class="chip on" data-page-node-id="ve0j9gXevGEOD5XYQqpbAM">references</span><span class="arrow" data-page-node-id="yUW6XdQhfWBNXuRrvpTbBv">→</span>
+        <span class="chip on" data-page-node-id="RdPzs3QdhwWSTqDKIGi9c3">answer（流式）</span>
+      </div>
+      <p style="color:var(--ink-3);font-size:12.5px;margin:10px 0 0" data-page-node-id="SJZaH0qbJSIg0wip20F0oj">
+        回答中内嵌 <code data-page-node-id="M68N5lcaKjaFG5oMFFGNrT">&lt;kb doc="…" chunk_id="…" /&gt;</code> 引用标记，可回溯到具体分块。
+      </p>
+    </div>
+    <div class="panel" data-page-node-id="708R7KtOEFmzmiBwS2hGCa">
+      <h4 data-page-node-id="w3Q7ZqbVE6YXBvqUcsrWOC">Agent 内部链路（ReAct 循环）</h4>
+      <div class="flow" data-page-node-id="u8UDWNGDu9i9o0Cw2EQ4z9">
+        <span class="chip on" data-page-node-id="D6uqlQN9mebkoTSIf81Wwq">grep_chunks</span>
+        <span class="chip on" data-page-node-id="9RRyy2JjBxiogSPC8NBId5">knowledge_search</span>
+        <span class="chip on" data-page-node-id="zSO7lpeRGsW8bp9nAx0eRM">list_knowledge_chunks</span>
+      </div>
+      <p style="color:var(--ink-3);font-size:12.5px;margin:10px 0 0" data-page-node-id="d3PQzMhDhh5R6WMeT7dmoS">
+        检索 → 通读全文 → 反思补检索 → 综合成答，共 6 次工具调用；<code data-page-node-id="TRHAUvY9Lr363vEwN2h5mc">builtin-smart-reasoning</code> 的
+        <code data-page-node-id="E6xf9K4FZPjJgED3hHKDBw">kb_selection_mode=all</code>，已绑定 rerank 模型。
+      </p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:12px" data-page-node-id="QsMI2AX3UnMgbjDMdHL2Gw">
+    <h4 data-page-node-id="uVnjRj4kvh4LRgD7EzMchh">图谱关系类型分布（白名单合规性）</h4>
+    <div class="flow" data-page-node-id="YRC9t8pBNFOajFRqiGEYkR">
+      <span class="chip on" data-page-node-id="EHwJW06PS2E2QnBHasAXul">系统组件 52</span>
+      <span class="chip on" data-page-node-id="tAggLjcEFfEGEMXQzkwACz">组织 29</span>
+      <span class="chip on" data-page-node-id="sDYEqAIAXmwnW7VsYOC0SV">角色 20</span>
+      <span class="chip on" data-page-node-id="Ivz9kAV9ioGkUyO92DYIAV">交付物 7</span>
+      <span class="chip on" data-page-node-id="EAvB2P40IWMFTRBk6KqCPg">项目阶段 6</span>
+      <span class="chip" style="color:var(--ink-3)" data-page-node-id="t8xF1AQDaQTsDD5d8MHnFi">名单外 0</span>
+    </div>
+    <p style="color:var(--ink-3);font-size:12.5px;margin:10px 0 0" data-page-node-id="kZy6DA1DdwwOfy0q3HjFNc">
+      对比 IDDC 库历史数据（名单外占比约 17%），本次通过 <code data-page-node-id="knWzAVc5xo0xUOu9eaVtJS">custom_instructions</code> 硬约束在<b data-page-node-id="wOmQdNkm2wVWKwV4gtfZAS">抽取阶段</b>即实现零污染——无需等待重建镜像。
+    </p>
+  </div>
+
+  <h2 data-page-node-id="vdt9BN08A2E5uElGjU11pd"><span class="n" data-page-node-id="QZiTp57QdtEfLBTu16wHzS">05</span>发现与建议</h2>
+
+  <div class="find good" data-page-node-id="EPuGwSlFzZLWY5Xd1xfayi">
+    <h4 data-page-node-id="pkKYgspcVTYx7VcwHCRlG9">① 本机文件导入实际可用（推翻既有结论）</h4>
+    <p data-page-node-id="3IfA86FIGYryAmcjxL0mJ1">MCP server 以本机 venv 的 <code data-page-node-id="LeypgPAHvzz0vv8xva2vMC">python.exe</code> 通过 stdio 启动，<code data-page-node-id="L0jdMicLsphUrbB3EMpOIa">MCP_ALLOWED_UPLOAD_DIRS</code> 未设置时不做根目录限制，因此宿主 Windows 路径可直接导入，不存在「跨容器读不到本地路径」问题。</p>
+    <div class="ev" data-page-node-id="guKM9czh4GKXFw9QxOhOFE">证据：4 个 <code data-page-node-id="7ovuB9z06hh5DrZy203Utx">C:\Users\…\.dsh\testbed\*.md/.txt/.csv</code> 全部上传成功并解析完成</div>
+  </div>
+
+  <div class="find good" data-page-node-id="cuOSnE0MVn7QwziirYGeR5">
+    <h4 data-page-node-id="pqNuUqtW4jYCmB6qwKohFf">② 图谱白名单靠提示词即可收口，不依赖代码改动</h4>
+    <p data-page-node-id="d3Ho4VpYDuLNTtbzauLh2w">在 <code data-page-node-id="0EaXeO3PAnU6fppi4YkVz9">tags</code> 与 <code data-page-node-id="91d0xmbZLiIcqNecvetIuB">custom_instructions</code> 中声明「关系 type 仅限五类」，抽取结果 114 条关系全部合规。此前计划的 Go 侧 <code data-page-node-id="qWeKsyQ8AJUhOaA2ieoavH">RemoveUnknownRelation</code> 补丁仍可作兜底，但对新库已非必需。</p>
+    <div class="ev" data-page-node-id="GRm7LKw1t75CVa6kyYLhCt">证据：Neo4j <code data-page-node-id="SGCB4xIJLwhaFe81Uez19s">MATCH (a)-[r]->(b) RETURN type(r), count(*)</code> → 仅返回 5 种类型，合计 114</div>
+  </div>
+
+  <div class="find good" data-page-node-id="6HFd5UxhsAnHksD7Y0e83X">
+    <h4 data-page-node-id="gGSHa1ZQ720kJNL5xMVn4G">③ MCP server 的 backfill 补丁已生效</h4>
+    <p data-page-node-id="qOWxcSgbzJCkxsWN2p40S3"><code data-page-node-id="OBbNqS96etle1rOjKKSYhF">update_extract_config</code> 运行时返回的工具说明中已包含「Multimodal / ASR / parser-engine 表会先回填」段落，而该文案只存在于打补丁后的源码；调用后复查 <code data-page-node-id="kzbmdKWSp8iS66NJUbuZXt">get_knowledge_base</code> 亦未见字段丢失。<code data-page-node-id="81qDRa7PucJJaI3LbSDSJX">_backfill_initialization_config()</code> 位于源码第 1291 行。</p>
+    <div class="ev" data-page-node-id="Q64TOwsR4kO7KeLukc9OVB">结论：上次会话遗留的第 ⑥ 项（重启 WorkBuddy 使补丁生效）已完成，无需再操作</div>
+  </div>
+
+  <div class="find warn" data-page-node-id="MK96XaRqohZOQsZcbDsrsL">
+    <h4 data-page-node-id="m27wdphxp1fLrr2PurVAEy">④ CSV 摘要卡的「单行摘要」存在数字漂移</h4>
+    <p data-page-node-id="aUqpeEaBGSp3bU1iOecihp">设备清单 Wiki 摘要页正文正确算出总额 <b data-page-node-id="rZmyUdC3ioNYUxO13XXBRE">497.2 万元</b>（4,972,080 元），但其顶部 <code data-page-node-id="iuDZYAHIsDXZVGsvRQ0cyy">summary</code> 字段写作「约 <b data-page-node-id="Zw6kTuuwVK7Ul0zoxyDIpJ">501.6 万元</b>」，偏差约 4.4 万元。正文与引用块均准确，属单行摘要的模型近似误差。</p>
+    <div class="ev" data-page-node-id="il1Czg2ovYEIufUmQTUOHx">建议：把单行摘要作为导航用，涉及金额/指标时以正文与 <code data-page-node-id="XZEdgXXLBqrzXTK06QVvR3">references</code> 为准</div>
+  </div>
+
+  <div class="find warn" data-page-node-id="7l4JHButTZP4ECXR9ewjjf">
+    <h4 data-page-node-id="hSVRifdODLexDq4mMoFF7w">⑤ Agent 回答前会输出英文过程叙述</h4>
+    <p data-page-node-id="XHm5SSS04RLYHwa41PeYeT"><code data-page-node-id="jPPx2onOo1G33VXtUOAeNM">agent_chat</code> 的最终答案开头带有 "I'll research this by searching the knowledge base…" / "I have all the information needed…" 等中间过程文本，中文提问下略显突兀，且这部分不计入 <code data-page-node-id="RL7Kq648prQ9RGsaqhJP59">references</code>。</p>
+    <div class="ev" data-page-node-id="g1Efsbs619bzGVT8hmxkIZ">建议：如需干净输出，可在消费侧裁掉首个工具调用之前的过程文本</div>
+  </div>
+
+  <div class="find info" data-page-node-id="lPk4iuOzrMTFNWlQ0yzurI">
+    <h4 data-page-node-id="rQNhwGNqM0PF2s8B8LOYLw">⑥ 图召回本次未参与最终引用</h4>
+    <p data-page-node-id="FyEDIwPRyHXFvNJ8CEfCj9">关系型提问（「吴敏和交付二部是什么关系」）返回的 <code data-page-node-id="0QEioyFJbDS0FSEDIeBcRG">match_type</code> 全为 1/2，未出现图召回的 6。这与设计一致：图召回不参与 RRF 融合，仅做 append + 去重，常在向量已命中时贡献为 0。</p>
+    <div class="ev" data-page-node-id="ulHiXeamB4GYJEJIoa7JZO">判据提示：不要以「引用里有没有 match_type=6」判断图谱是否工作，应直接查 Neo4j 或服务日志的 entity search 计数</div>
+  </div>
+
+  <div class="find info" data-page-node-id="DMd1QviLhiNjot6dNgrvIq">
+    <h4 data-page-node-id="d6qjaUOg03NAgXgxJ0Dto4">⑦ Wiki 合成模型未配置但页面照常生成</h4>
+    <p data-page-node-id="itsaqnE7DYgrJ7D05YM49x">本库 <code data-page-node-id="qrwnoNYYmfBrgDTwIkS1JA">wiki_config.synthesis_model_id</code> 为空，但实体/概念/摘要页仍正常产出（68 页），仅 <code data-page-node-id="mZK1xCuiujRFzCphZm3Nww">synthesis</code> 与 <code data-page-node-id="k5gCCghe78dlor95mGMMJp">comparison</code> 两类页面数为 0。若需要主题综述/对比页，需补配该模型。</p>
+  </div>
+
+  <div class="find info" data-page-node-id="iOuszrFjuE0XYtDS6IblCS">
+    <h4 data-page-node-id="his209KFpcB3d49GZi8G92">⑧ IDDC 库的 Go 侧补丁仍未生效（历史遗留）</h4>
+    <p data-page-node-id="Aj8BvYfFAY4enAOEQVBHRz">本报告未触碰 IDDC。此前已确认：运行中服务是 v0.8.0，而本地源码为 v0.7.1，Go 补丁打在错误基线上；如需生效须先对齐 v0.8.0 基线再重建 app 镜像（本机无 Go 工具链，未编译验证）。</p>
+  </div>
+
+  <h2 data-page-node-id="9F5iDEqtQkP2pJWX6YQfgz"><span class="n" data-page-node-id="Mnfj4ryNIu1VZjRRcSRgD6">06</span>本次新建的资产</h2>
+  <table data-page-node-id="HRXNDHjqBWAWO8tIpgvhc5">
+    <thead data-page-node-id="zbAgvUVE2YGvp7HwRZURD5"><tr data-page-node-id="RNLLFi4nPfCOYLlih0iBeQ"><th data-page-node-id="QnCLqRpB6iQbGONYhu253O">类型</th><th data-page-node-id="rxFBJrfAc2UZgLDbHk1Usk">路径 / 标识</th><th data-page-node-id="xDDATGbkAhZIZY8XhyIi9E">说明</th></tr></thead>
+    <tbody data-page-node-id="hYujTTNUOVYhZan1V9KdxL">
+      <tr data-page-node-id="3pl915glbcWAIbnQ66Tm4k"><td data-page-node-id="OskY1o2P1L4GSzfHhjMp2x">知识库</td><td data-page-node-id="resuKAKP18dy7SH8dHHoS3"><code data-page-node-id="kFjZPHBnvGaoTXuHAuuKfs">6fb06bc4-26be-4491-a935-026cb735023e</code></td><td data-page-node-id="0k2ZwutjfOy18SVvsO6ikY">「星海园区功能测试库」，含 4 文档，graph + wiki 已开启；可按需保留或删除</td></tr>
+      <tr data-page-node-id="O1Winux458vH2EagwoKBfZ"><td data-page-node-id="6tgKvF6vO8gRA9e46rP7gk">测试文档</td><td data-page-node-id="8mWf5QDJ2yJq6iNOGHnmlk"><code data-page-node-id="dAs60lOdhAaxGQzVRP3uDR">.dsh/testbed/01…04</code></td><td data-page-node-id="q5Q7MVtTPg6QnCokAFcv4R">4 份自建素材，可重复用于回归测试</td></tr>
+      <tr data-page-node-id="axChcDrEI2xIxsC0w4bsAa"><td data-page-node-id="owHjZl3H3ae2UPrVbFNUZx">探针脚本</td><td data-page-node-id="o6yAdCiEwf5SnORAEyihEy"><code data-page-node-id="YV42PSajpu7fhtTU6LRy1D">.dsh/testbed/_probe.py</code></td><td data-page-node-id="HtnbOsQmYgzjPwMNF8l0E4">解析 Agent 列表 + 查询 Neo4j 图谱统计</td></tr>
+      <tr data-page-node-id="5BqULojT3UiKIIYRYQMPC4"><td data-page-node-id="aIXtKC0LxN1ChDCoz3SxwL">本报告</td><td data-page-node-id="ltohLOPl6EYwWyu6OaCYMk"><code data-page-node-id="dkdUbvBIgp5eRYo4jjmHzQ">weknora-mcp-test-report.html</code></td><td data-page-node-id="jhrQpX43CCqGSFaENJvHnD">—</td></tr>
+    </tbody>
+  </table>
+
+  <footer data-page-node-id="UQmUyUDquH3jigZI5t7UZa">
+    WeKnora v0.8.0 · MCP 40 工具 · 检索策略 向量 0.7 + 关键词 0.3（RRF k=60）+ 摘要块加成 · 生成于 2026-09-10
+  </footer>
+
+</div>
+</body>
+</html>
