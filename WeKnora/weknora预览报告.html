@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeKnora 项目可视化总览 · 功能 · MCP 集成 · 服务启用</title>
+<style>
+  :root{
+    --bg:#070b14;
+    --bg2:#0c1322;
+    --panel:rgba(20,30,50,.72);
+    --panel2:rgba(28,40,64,.6);
+    --line:rgba(120,160,220,.18);
+    --line2:rgba(120,160,220,.34);
+    --txt:#e8eefb;
+    --muted:#93a4c4;
+    --dim:#6b7d9e;
+    --blue:#4f9dff;
+    --cyan:#31d6d6;
+    --violet:#9b7bff;
+    --green:#39d98a;
+    --amber:#ffb44d;
+    --pink:#ff6f9c;
+    --radius:16px;
+    --mono:ui-monospace,SFMono-Regular,"Cascadia Code",Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:80px}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.75;font-size:15px;
+    background-image:
+      radial-gradient(1100px 520px at 12% -8%,rgba(79,157,255,.16),transparent 62%),
+      radial-gradient(900px 480px at 92% 4%,rgba(155,123,255,.14),transparent 60%),
+      radial-gradient(800px 420px at 60% 100%,rgba(49,214,214,.08),transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:rgba(120,160,220,.14);border:1px solid var(--line);padding:.1em .38em;border-radius:5px;color:#cfe3ff}
+  h1,h2,h3,h4{line-height:1.35;margin:0}
+  ::selection{background:rgba(79,157,255,.35)}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:60;
+    backdrop-filter:blur(14px);
+    background:linear-gradient(180deg,rgba(7,11,20,.92),rgba(7,11,20,.72));
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{max-width:1560px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.4px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));box-shadow:0 0 14px rgba(79,157,255,.85)}
+  .brand small{font-weight:500;color:var(--dim);font-size:12px;letter-spacing:0}
+  .topnav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .topnav a{
+    color:var(--muted);font-size:13px;padding:6px 11px;border-radius:9px;border:1px solid transparent;white-space:nowrap;
+  }
+  .topnav a:hover{background:rgba(120,160,220,.12);color:var(--txt);text-decoration:none}
+  .topnav a.active{background:rgba(79,157,255,.16);border-color:var(--line2);color:#dbe9ff}
+
+  /* ---------- 布局 ---------- */
+  .layout{max-width:1560px;margin:0 auto;padding:26px 22px 90px;display:grid;grid-template-columns:236px minmax(0,1fr);gap:30px;align-items:start}
+  .sidebar{position:sticky;top:76px;font-size:13.5px}
+  .sidebar .grp{margin-bottom:16px}
+  .sidebar .grp-t{font-size:11px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase;margin:0 0 7px 10px}
+  .sidebar a{display:block;color:var(--muted);padding:6px 11px;border-radius:8px;border-left:2px solid transparent}
+  .sidebar a:hover{background:rgba(120,160,220,.1);color:var(--txt);text-decoration:none}
+  .sidebar a.active{background:rgba(79,157,255,.14);border-left-color:var(--blue);color:#e4efff;font-weight:600}
+  main{min-width:0}
+
+  /* ---------- 通用块 ---------- */
+  section{margin-bottom:52px;scroll-margin-top:82px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .sec-head h2{font-size:25px;letter-spacing:.3px}
+  .sec-head .kicker{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:1px}
+  .sec-sub{color:var(--muted);font-size:14px;margin:0 0 20px;max-width:96ch}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;backdrop-filter:blur(8px);
+  }
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(196px,1fr))}
+
+  .tag{
+    display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:2px 9px;border-radius:999px;
+    border:1px solid var(--line2);color:#cfe0ff;background:rgba(79,157,255,.1);white-space:nowrap;
+  }
+  .tag.g{color:#bff3d8;border-color:rgba(57,217,138,.4);background:rgba(57,217,138,.1)}
+  .tag.a{color:#ffe3b8;border-color:rgba(255,180,77,.4);background:rgba(255,180,77,.1)}
+  .tag.v{color:#e0d6ff;border-color:rgba(155,123,255,.42);background:rgba(155,123,255,.12)}
+  .tag.p{color:#ffd3e2;border-color:rgba(255,111,156,.4);background:rgba(255,111,156,.1)}
+  .tag.m{color:#c9d8f2;border-color:var(--line2);background:rgba(120,160,220,.1)}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--line2);
+    background:linear-gradient(140deg,rgba(79,157,255,.16),rgba(155,123,255,.1) 45%,rgba(49,214,214,.09));
+    padding:34px 34px 30px;margin-bottom:34px;
+  }
+  .hero::after{
+    content:"";position:absolute;inset:auto -60px -120px auto;width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(79,157,255,.28),transparent 65%);pointer-events:none;
+  }
+  .hero h1{font-size:34px;letter-spacing:.5px;margin-bottom:10px}
+  .hero h1 .grad{background:linear-gradient(100deg,#8fc4ff,#31d6d6 45%,#b79bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:#c3d2ea;max-width:92ch;margin:0 0 18px}
+  .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;position:relative;z-index:1}
+  .stat{background:rgba(8,14,26,.6);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+  .stat b{display:block;font-size:22px;letter-spacing:.4px;background:linear-gradient(120deg,#8fc4ff,#31d6d6);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat span{font-size:12px;color:var(--muted)}
+
+  /* ---------- 架构流 ---------- */
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;align-items:stretch}
+  .flow-step{
+    position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:14px 15px;
+  }
+  .flow-step .n{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:1px}
+  .flow-step h4{font-size:14.5px;margin:3px 0 6px}
+  .flow-step p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .flow-step::after{
+    content:"›";position:absolute;right:-11px;top:50%;transform:translateY(-50%);
+    color:var(--line2);font-size:20px;font-weight:700;
+  }
+  .flow-step:last-child::after{display:none}
+
+  /* ---------- 功能卡 ---------- */
+  .feat{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:17px 18px;transition:.18s}
+  .feat:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:0 14px 34px -20px rgba(79,157,255,.5)}
+  .feat .ico{font-size:19px;margin-bottom:7px;display:block}
+  .feat h3{font-size:15.5px;margin-bottom:6px}
+  .feat p{margin:0;font-size:13.2px;color:var(--muted);line-height:1.7}
+  .feat ul{margin:8px 0 0;padding-left:17px;font-size:12.8px;color:var(--muted)}
+  .feat li{margin:3px 0}
+
+  /* ---------- 表格 ---------- */
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+  table{width:100%;border-collapse:collapse;font-size:13.2px;min-width:600px}
+  th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:rgba(79,157,255,.09);color:#cfe0ff;font-weight:600;font-size:12.5px;letter-spacing:.3px;white-space:nowrap}
+  tbody tr:hover{background:rgba(120,160,220,.07)}
+  tbody tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+
+  /* ---------- 代码块 ---------- */
+  .code{position:relative;border:1px solid var(--line);border-radius:13px;background:#060a12;overflow:hidden}
+  .code .bar{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid var(--line);background:rgba(120,160,220,.06)}
+  .code .bar .fname{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+  .code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.6px;line-height:1.75;color:#c7d8f0}
+  .code .k{color:#9b7bff}
+  .code .s{color:#39d98a}
+  .code .c{color:#5f7295;font-style:italic}
+  .code .f{color:#4f9dff}
+  .copy{
+    margin-left:auto;font-size:11.5px;padding:3px 10px;border-radius:7px;cursor:pointer;
+    background:rgba(79,157,255,.16);border:1px solid var(--line2);color:#dbe9ff;font-family:inherit;
+  }
+  .copy:hover{background:rgba(79,157,255,.3)}
+  .copy.ok{background:rgba(57,217,138,.22);border-color:rgba(57,217,138,.5);color:#c9f7de}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tab{
+    padding:9px 17px;border-radius:11px;cursor:pointer;font-size:13.5px;font-weight:600;
+    background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.16s;
+  }
+  .tab:hover{color:var(--txt);border-color:var(--line2)}
+  .tab.active{background:linear-gradient(120deg,rgba(79,157,255,.28),rgba(49,214,214,.18));border-color:rgba(79,157,255,.55);color:#eef6ff}
+  .tab-panel{display:none;animation:fade .22s ease}
+  .tab-panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- 工具浏览 ---------- */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{
+    font-size:12.5px;padding:5px 12px;border-radius:999px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.15s;font-family:inherit;
+  }
+  .chip:hover{color:var(--txt);border-color:var(--line2)}
+  .chip.active{background:rgba(79,157,255,.22);border-color:rgba(79,157,255,.55);color:#eaf3ff;font-weight:600}
+  #toolSearch{
+    flex:1;min-width:200px;padding:8px 13px;border-radius:10px;font-size:13.5px;font-family:inherit;
+    background:#060a12;border:1px solid var(--line);color:var(--txt);outline:none;
+  }
+  #toolSearch:focus{border-color:rgba(79,157,255,.6);box-shadow:0 0 0 3px rgba(79,157,255,.14)}
+  .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px}
+  .tool{
+    border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:12px 14px;
+  }
+  .tool .th{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+  .tool .tn{font-family:var(--mono);font-size:13px;color:#9fd0ff;font-weight:600}
+  .tool .td{font-size:12.6px;color:var(--muted);line-height:1.65;margin:0}
+  .tool .tp{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin:7px 0 0;word-break:break-word}
+  .empty{color:var(--dim);font-size:13.5px;padding:18px;text-align:center}
+
+  /* ---------- Profile 构建器 ---------- */
+  .builder{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  .prof-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:10px}
+  .prof{
+    display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:12px;cursor:pointer;
+    border:1px solid var(--line);background:var(--panel2);transition:.15s;
+  }
+  .prof:hover{border-color:var(--line2)}
+  .prof.on{border-color:rgba(79,157,255,.6);background:rgba(79,157,255,.13)}
+  .prof input{margin-top:5px;accent-color:#4f9dff;width:15px;height:15px;cursor:pointer;flex:none}
+  .prof .pt{font-family:var(--mono);font-size:13px;color:#9fd0ff;font-weight:600}
+  .prof .pd{font-size:12.4px;color:var(--muted);margin-top:2px;line-height:1.6}
+  .prof .ps{font-size:11.5px;color:var(--dim);margin-top:5px;font-family:var(--mono);word-break:break-word}
+
+  .callout{
+    border-left:3px solid var(--blue);background:rgba(79,157,255,.09);border-radius:0 12px 12px 0;
+    padding:13px 17px;font-size:13.4px;color:#c8d9f2;margin:16px 0;
+  }
+  .callout.warn{border-left-color:var(--amber);background:rgba(255,180,77,.09)}
+  .callout.ok{border-left-color:var(--green);background:rgba(57,217,138,.09)}
+  .callout b{color:#fff}
+
+  .footer{color:var(--dim);font-size:12.5px;text-align:center;padding-top:26px;border-top:1px solid var(--line);margin-top:40px}
+
+  @media (max-width:1040px){
+    .layout{grid-template-columns:1fr;gap:18px}
+    .sidebar{position:static;display:flex;gap:22px;flex-wrap:wrap;padding-bottom:6px}
+    .sidebar .grp{margin-bottom:0}
+    .sidebar a{display:inline-block}
+    .sidebar .grp-t{display:none}
+  }
+  @media (max-width:620px){
+    .hero{padding:24px 20px}
+    .hero h1{font-size:25px}
+    .layout{padding:18px 14px 70px}
+    .card{padding:16px 15px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="dot"></span>
+      WeKnora
+      <small>项目可视化总览</small>
+    </div>
+    <nav class="topnav">
+      <a href="#overview">概览</a>
+      <a href="#arch">架构</a>
+      <a href="#features">功能</a>
+      <a href="#mcp">MCP 集成</a>
+      <a href="#tools">MCP 工具</a>
+      <a href="#services">服务启用</a>
+      <a href="#quickstart">快速上手</a>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="grp">
+      <p class="grp-t">项目</p>
+      <a href="#overview">项目概览</a>
+      <a href="#arch">技术架构</a>
+      <a href="#features">功能全景</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">MCP</p>
+      <a href="#mcp">集成两种方向</a>
+      <a href="#tools">MCP 工具清单</a>
+      <a href="#agent-tools">内置 Agent 工具</a>
+    </div>
+    <div class="grp">
+      <p class="grp-t">部署</p>
+      <a href="#services">核心服务</a>
+      <a href="#profiles">可选 Profile</a>
+      <a href="#env">环境变量开关</a>
+      <a href="#quickstart">快速上手</a>
+      <a href="#notes">注意事项</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ================= 概览 ================= -->
+    <div class="hero" id="overview">
+      <div class="hero-meta">
+        <span class="tag">Tencent / WeKnora</span>
+        <span class="tag g">v0.7.1</span>
+        <span class="tag v">MIT License</span>
+        <span class="tag m">Go + Python + Vue3</span>
+        <span class="tag a">可私有化部署</span>
+      </div>
+      <h1>把文档变成<span class="grad">会思考的知识资产</span></h1>
+      <p>
+        WeKnora 是一个开源的、由 LLM 驱动的企业级知识框架，面向<strong>文档理解、语义检索与自主推理</strong>。
+        它围绕三条主线组织能力：面向日常查问的 <strong>RAG 快速问答</strong>、可自主编排检索 / MCP 工具 / 联网搜索的
+        <strong>ReAct Agent</strong>，以及把原始文档蒸馏为互相链接的 Markdown 知识库的 <strong>Wiki 模式</strong>。
+      </p>
+      <div class="stat-row">
+        <div class="stat"><b>3</b><span>核心能力：RAG / Agent / Wiki</span></div>
+        <div class="stat"><b>28</b><span>MCP Server 暴露工具</span></div>
+        <div class="stat"><b>24</b><span>内置 Agent 工具</span></div>
+        <div class="stat"><b>16+</b><span>LLM 供应商</span></div>
+        <div class="stat"><b>8</b><span>向量数据库后端</span></div>
+        <div class="stat"><b>10</b><span>IM 渠道接入</span></div>
+      </div>
+    </div>
+
+    <!-- ================= 架构 ================= -->
+    <section id="arch">
+      <div class="sec-head">
+        <span class="kicker">ARCHITECTURE</span>
+        <h2>技术架构与数据流</h2>
+      </div>
+      <p class="sec-sub">从文档接入到最终回答，全链路模块化 —— 解析器、分块策略、Embedding、向量库、LLM、存储后端均可替换。</p>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="flow">
+          <div class="flow-step">
+            <div class="n">01 · INGEST</div>
+            <h4>多源接入</h4>
+            <p>文件上传 / URL 导入 / 飞书·Notion·语雀·RSS 自动同步 / Chrome 扩展 / IM 消息</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">02 · PARSE</div>
+            <h4>文档解析 docreader</h4>
+            <p>PDF / Word / Excel / PPT / Markdown / HTML / EPUB / MHTML / 图片；OCR、VLM 描述、ASR 语音</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">03 · CHUNK</div>
+            <h4>智能分块</h4>
+            <p>自适应三层分块、父子分块（parent-child）、实时预览</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">04 · EMBED</div>
+            <h4>向量化</h4>
+            <p>BGE / GTE / 智谱 / OpenAI 兼容 / Ollama 本地 Embedding</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">05 · STORE</div>
+            <h4>存储层</h4>
+            <p>向量库 + 对象存储 + PostgreSQL 元数据，支持多实例绑定到不同知识库</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">06 · RETRIEVE</div>
+            <h4>混合检索</h4>
+            <p>BM25 稀疏 + Dense 稠密 + GraphRAG + Rerank 重排，多向量库扇出</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">07 · REASON</div>
+            <h4>生成与推理</h4>
+            <p>RAG 直答 / ReAct 多步推理 / MCP 工具调用 / 联网搜索 / Wiki 蒸馏</p>
+          </div>
+          <div class="flow-step">
+            <div class="n">08 · DELIVER</div>
+            <h4>多端输出</h4>
+            <p>Web UI / REST API / CLI / IM 渠道 / 网站嵌入挂件 / 微信小程序</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3 style="font-size:15.5px;margin-bottom:10px">后端目录（Go）</h3>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <span class="tag m">cmd/server</span>
+            <span class="tag m">cmd/desktop</span>
+            <span class="tag m">internal/agent</span>
+            <span class="tag m">internal/mcp</span>
+            <span class="tag m">internal/handler</span>
+            <span class="tag m">internal/router</span>
+            <span class="tag m">internal/im</span>
+            <span class="tag m">internal/datasource</span>
+            <span class="tag m">internal/sandbox</span>
+            <span class="tag m">internal/runtime</span>
+            <span class="tag m">internal/tracing</span>
+            <span class="tag m">internal/models</span>
+            <span class="tag m">migrations</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15.5px;margin-bottom:10px">前端页面（Vue 3）</h3>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <span class="tag m">chat</span>
+            <span class="tag m">knowledge</span>
+            <span class="tag m">agent</span>
+            <span class="tag m">settings</span>
+            <span class="tag m">organization</span>
+            <span class="tag m">platform</span>
+            <span class="tag m">integrations</span>
+            <span class="tag m">embed</span>
+            <span class="tag m">system</span>
+            <span class="tag m">auth</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 功能全景 ================= -->
+    <section id="features">
+      <div class="sec-head">
+        <span class="kicker">FEATURES</span>
+        <h2>功能全景</h2>
+      </div>
+      <p class="sec-sub">按四大板块梳理，共 40+ 项能力。带 <span class="tag a">新</span> 标记的为 v0.6.x / v0.7.x 新增。</p>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">① 智能对话</h3>
+      <div class="grid g3" style="margin-bottom:26px">
+        <div class="feat">
+          <span class="ico">🧠</span>
+          <h3>ReACT 智能推理</h3>
+          <p>渐进式多步推理，自主编排知识检索、MCP 工具与联网搜索，直到得出答案。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">💬</span>
+          <h3>RAG 快速问答</h3>
+          <p>面向知识库的检索增强问答，适合日常高频查问，响应快、引用可溯源。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">📖</span>
+          <h3>Wiki 模式</h3>
+          <p>Agent 自动把原始文档蒸馏成结构化、互相链接的 Markdown 页面，并生成可视化知识图谱。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔧</span>
+          <h3>工具调用</h3>
+          <p>内置工具 + MCP 工具（含 OAuth2 远程服务、会话中 OAuth）+ 联网搜索；支持 <code>@Skill</code> / <code>@MCP</code> 按轮次限定 Agent 可用范围。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🎛️</span>
+          <h3>会话策略</h3>
+          <p>在线 Prompt 编辑、检索阈值调优、多轮上下文感知、按 Agent 控制引用输出。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">❓</span>
+          <h3>推荐问题</h3>
+          <p>基于知识库内容自动生成开场提问建议与答后追问，降低使用门槛。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">📎</span>
+          <h3>临时附件</h3>
+          <p>会话级图片 / 文档上传并异步解析，用于一次性问答，支持图片+附件组合上限。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔗</span>
+          <h3>引用与进度</h3>
+          <p>行内引用浮层 + 参考资料抽屉（区分联网 / 知识库来源），聊天中实时展示 RAG 流水线阶段进度。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🗂️</span>
+          <h3>会话管理</h3>
+          <p>侧栏按来源（Web / IM / Embed）过滤分组会话，支持行内重命名标题。</p>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">② 知识管理</h3>
+      <div class="grid g3" style="margin-bottom:26px">
+        <div class="feat">
+          <span class="ico">📚</span>
+          <h3>知识库类型</h3>
+          <p>FAQ / 文档 / Wiki 三类，支持文件夹导入、URL 导入、多标签管理与在线录入。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">⚙️</span>
+          <h3>上传级处理配置</h3>
+          <p>每批上传可单独覆盖解析器、分块、多模态（VLM / ASR）、图谱抽取与问题生成；支持带新配置重解析。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔄</span>
+          <h3>批量重解析</h3>
+          <p>一次为多个文档重新排队解析，可携带每批 <code>process_config</code>。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔌</span>
+          <h3>数据源自动同步</h3>
+          <p>飞书 / Notion / 语雀 / RSS 增量与全量同步，更多数据源持续接入。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">📄</span>
+          <h3>文档格式</h3>
+          <p>PDF、Word、Txt、Markdown、HTML、EPUB、MHTML、图片、CSV、Excel、PPT、JSON。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🎯</span>
+          <h3>检索策略</h3>
+          <p>BM25 稀疏 / Dense 稠密 / GraphRAG / 父子分块 / HNSW 加速 pgvector（1024 维）/ 多维索引。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🖱️</span>
+          <h3>批量选择</h3>
+          <p>知识库列表中框选拖拽多选，批量执行删除、重解析等操作。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🧪</span>
+          <h3>端到端评测</h3>
+          <p>全流水线可视化，提供召回命中率、BLEU / ROUGE 等指标评估。</p>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">③ 集成与扩展</h3>
+      <div class="grid g3" style="margin-bottom:26px">
+        <div class="feat">
+          <span class="ico">🤖</span>
+          <h3>LLM 供应商</h3>
+          <p>OpenAI / Azure OpenAI / Anthropic / DeepSeek / 通义千问 / 智谱 / 混元 / 豆包 / Gemini / MiniMax / NVIDIA / Novita / SiliconFlow / OpenRouter / Requesty / Ollama。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🧬</span>
+          <h3>Embedding</h3>
+          <p>Ollama / BGE / GTE / 智谱 / OpenAI 兼容 API。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🗄️</span>
+          <h3>向量数据库</h3>
+          <p>PostgreSQL(pgvector) / Elasticsearch / OpenSearch / Milvus / Weaviate / Qdrant / Apache Doris / 腾讯 VectorDB。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🪣</span>
+          <h3>对象存储</h3>
+          <p>本地 / MinIO / AWS S3 / 火山 TOS / 阿里 OSS / 金山 KS3 / 华为 OBS；每空间可配多存储实例并按知识库绑定。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">💌</span>
+          <h3>IM 渠道</h3>
+          <p>企业微信 / 飞书 / Lark / QQBot / Slack / Telegram / 钉钉 / Mattermost / 微信 / 云之家。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🌐</span>
+          <h3>网站嵌入</h3>
+          <p>嵌入挂件发布 Agent，支持域名白名单、限流与安全模式令牌交换。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔍</span>
+          <h3>联网搜索</h3>
+          <p>DuckDuckGo / Bing / Google / Tavily / 百度 / Ollama / SearXNG / Keenable / 智谱 AI。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔑</span>
+          <h3>API 集成</h3>
+          <p>细粒度 API Key（能力级授权 + 知识库限制 + 限流的最近使用追踪）与 API 集成调试台。</p>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">④ 平台能力</h3>
+      <div class="grid g3">
+        <div class="feat">
+          <span class="ico">🚢</span>
+          <h3>部署形态</h3>
+          <p>本地 / Docker / Kubernetes（Helm），支持私有化与离线部署。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🖥️</span>
+          <h3>访问入口</h3>
+          <p>Web UI / RESTful API / CLI（<code>weknora</code>）/ Chrome 扩展 / 网站嵌入挂件 / 微信小程序。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🛡️</span>
+          <h3>访问控制</h3>
+          <p>工作空间 RBAC 四级角色（Owner / Admin / Contributor / Viewer）、按知识库的资源归属、空间级审计日志、邀请制空间、跨空间超级管理员。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔒</span>
+          <h3>安全</h3>
+          <p>API Key 与 MCP / 数据源凭据 AES-256-GCM 静态加密并可平滑轮换；app↔docreader gRPC TLS + Token；Redis TLS；SSRF 安全 HTTP 客户端；响应密钥脱敏；Agent 技能沙箱隔离。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🔭</span>
+          <h3>可观测性</h3>
+          <p>集成 Langfuse（唯一追踪后端）覆盖 ReAct 循环、Token 统计、工具调用与流水线追踪；文档解析追踪时间线；系统管理员运行态任务队列看板。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">📊</span>
+          <h3>任务管理</h3>
+          <p>MQ 异步任务 + 分阶段 worker 池治理（core / post-process / enrichment / maintenance + 弹性共享池 + 独立 Wiki 池），按模型的后台并发调控；升级自动迁移数据库。</p>
+        </div>
+        <div class="feat">
+          <span class="ico">🧩</span>
+          <h3>模型管理</h3>
+          <p>集中配置、YAML 声明式内置模型、按知识库选模型、按模型的思考模式与向量维度覆盖、交互式模型测试调试台、多空间共享内置模型。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MCP 集成 ================= -->
+    <section id="mcp">
+      <div class="sec-head">
+        <span class="kicker">MCP INTEGRATION</span>
+        <h2>MCP 集成：两个方向</h2>
+      </div>
+      <p class="sec-sub">
+        MCP（Model Context Protocol）在 WeKnora 里是<strong>双向</strong>的：既可以让 WeKnora 的 Agent 去调用外部 MCP 工具（客户端方向），
+        也可以把 WeKnora 的知识库能力暴露给 Claude Desktop / Cursor / 其他 AI Agent 使用（服务端方向）。
+      </p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="mcp-a">A · WeKnora 作为 MCP 客户端（消费外部工具）</button>
+        <button class="tab" data-tab="mcp-b">B · WeKnora 作为 MCP 服务端（对外暴露知识库）</button>
+      </div>
+
+      <!-- A -->
+      <div class="tab-panel active" id="mcp-a">
+        <div class="callout">
+          <b>方向 A：</b>在 <code>设置 → MCP 服务</code> 里登记外部 MCP Server，WeKnora 的 Agent 在 ReAct 推理时即可调用它们的工具
+          —— 相当于给知识库问答插上「外部世界的操作能力」。
+        </div>
+
+        <div class="grid g2" style="margin-bottom:18px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:10px">能实现什么</h3>
+            <ul style="margin:0;padding-left:19px;font-size:13.3px;color:var(--muted);line-height:1.9">
+              <li>让问答 Agent 直接查询业务数据库、调用内部微服务</li>
+              <li>接入代码执行 / 数据分析类 MCP（Code Interpreter 等）</li>
+              <li>接入外部搜索、地图、工单、CRM 等第三方能力</li>
+              <li>远程 MCP 服务可用 <b>OAuth2</b> 鉴权，支持会话中途发起 OAuth</li>
+              <li>用 <code>@MCP</code> 提及在单轮对话中限定可用工具范围</li>
+              <li>危险工具可开启<b>人工审核</b>，执行前中断等待确认</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:10px">配置要素</h3>
+            <div class="tbl-wrap" style="border:none;background:transparent">
+              <table style="min-width:0">
+                <tbody>
+                  <tr><td style="width:110px"><b>传输方式</b></td><td>SSE（推荐，流式体验）/ HTTP Streamable（标准兼容）/ Stdio（本地 uvx·npx 命令）</td></tr>
+                  <tr><td><b>连接信息</b></td><td>URL 或启动命令 + 参数 + 环境变量</td></tr>
+                  <tr><td><b>认证</b></td><td>API Key / Bearer Token / OAuth2</td></tr>
+                  <tr><td><b>高级</b></td><td>timeout、retry_count、retry_delay</td></tr>
+                  <tr><td><b>入口</b></td><td>前端 <code>设置 → MCP 服务</code>，支持启停 / 测试 / 编辑 / 删除</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-bottom:18px">
+          <div class="code">
+            <div class="bar"><span class="fname">连接测试 API</span><button class="copy">复制</button></div>
+<pre><span class="c"># 测试连通性，返回可用工具清单（含输入 schema）与资源列表</span>
+POST /api/v1/mcp-services/{id}/test
+
+<span class="c"># 启停服务</span>
+PUT  /api/v1/mcp-services/{id}</pre>
+          </div>
+          <div class="code">
+            <div class="bar"><span class="fname">人工审核（危险工具）</span><button class="copy">复制</button></div>
+<pre><span class="c"># 列出 / 设置某工具是否需要人工审核</span>
+GET /api/v1/mcp-services/:id/tool-approvals
+PUT /api/v1/mcp-services/:id/tool-approvals/:tool_name
+
+<span class="c"># 审批卡片提交结果</span>
+POST /api/v1/agent/tool-approvals/:pending_id
+{ <span class="s">"decision"</span>: <span class="s">"approve"</span> | <span class="s">"reject"</span> }</pre>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <b>审核机制要点：</b>Agent 即将调用已打标工具时推送 <code>tool_approval_required</code> 事件，前端弹出审批卡片（可编辑 JSON 参数）；
+          通过或拒绝后恢复执行，拒绝时把错误信息返回给模型、不会真的调用远端。默认等待 10 分钟超时视为拒绝，
+          可用 <code>WEKNORA_AGENT_TOOL_APPROVAL_TIMEOUT=600</code> 调整。多副本部署时依赖 Redis Pub/Sub 跨实例唤醒等待者。
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="tab-panel" id="mcp-b">
+        <div class="callout">
+          <b>方向 B：</b>项目自带一个 Python 实现的 <code>weknora-mcp-server</code>（PyPI 包名 <code>tencent-weknora-mcp</code>），
+          把 WeKnora 的知识管理 API 包装成 <b>28 个 MCP 工具</b>。任何支持 MCP 的宿主（Claude Desktop、Cursor、KiloCode、DSH…）接入后，
+          就能用自然语言驱动知识库：检索、导入、问答、Agent 对话、Wiki 浏览。
+        </div>
+
+        <div class="grid g2" style="margin-bottom:18px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:10px">集成后可以实现</h3>
+            <ul style="margin:0;padding-left:19px;font-size:13.3px;color:var(--muted);line-height:1.9">
+              <li><b>知识库检索</b> —— <code>hybrid_search</code> 向量 + 关键词混合搜索，可直接回答「根据我的知识库…」</li>
+              <li><b>文档导入</b> —— 从本地文件或 URL 一键灌入知识库</li>
+              <li><b>知识管理</b> —— 列出 / 查看 / 删除知识条目与文本分块</li>
+              <li><b>RAG 问答</b> —— <code>chat</code> 走检索增强流水线并返回带引用的答案</li>
+              <li><b>Agent 对话</b> —— <code>agent_chat</code> 触发 WeKnora 的 ReAct Agent 做多步推理</li>
+              <li><b>Wiki 浏览</b> —— <code>wiki_search</code> / <code>wiki_read_page</code> / <code>wiki_index_view</code></li>
+              <li><b>空间与模型管理</b> —— 创建空间、知识库、模型配置、会话</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:10px">两种对外暴露方式</h3>
+            <div class="tbl-wrap" style="border:none;background:transparent">
+              <table style="min-width:0">
+                <thead><tr><th>方式</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><b>Python MCP Server</b></td>
+                    <td><code>mcp-server/</code> 目录，支持 stdio / SSE / HTTP 三种传输；也可 <code>pip install tencent-weknora-mcp</code> 或 <code>uvx --from tencent-weknora-mcp weknora-mcp-server</code></td>
+                  </tr>
+                  <tr>
+                    <td><b>CLI MCP Serve</b></td>
+                    <td><code>weknora mcp serve</code> —— 官方 CLI 提供的一套精简只读 MCP 工具面，适合 AI Agent 直接调用</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:7px;flex-wrap:wrap">
+              <span class="tag g">stdio</span>
+              <span class="tag g">SSE</span>
+              <span class="tag g">HTTP Streamable</span>
+              <span class="tag a">需 WEKNORA_BASE_URL</span>
+              <span class="tag a">需 WEKNORA_API_KEY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g2">
+          <div class="code">
+            <div class="bar"><span class="fname">Claude Desktop / Cursor 配置</span><button class="copy">复制</button></div>
+<pre>{
+  <span class="s">"mcpServers"</span>: {
+    <span class="s">"weknora"</span>: {
+      <span class="s">"command"</span>: <span class="s">"uv"</span>,
+      <span class="s">"args"</span>: [
+        <span class="s">"--directory"</span>,
+        <span class="s">"/path/WeKnora/mcp-server"</span>,
+        <span class="s">"run"</span>,
+        <span class="s">"run_server.py"</span>
+      ],
+      <span class="s">"env"</span>: {
+        <span class="s">"WEKNORA_API_KEY"</span>: <span class="s">"your_api_key_here"</span>,
+        <span class="s">"WEKNORA_BASE_URL"</span>: <span class="s">"http://localhost:8080/api/v1"</span>
+      }
+    }
+  }
+}</pre>
+          </div>
+          <div class="code">
+            <div class="bar"><span class="fname">用官方 CLI 起 MCP 服务</span><button class="copy">复制</button></div>
+<pre><span class="c"># 1) 安装 CLI 并登录（或用 WEKNORA_API_KEY + WEKNORA_HOST 免登录）</span>
+weknora profile add prod --host https://kb.example.com --use
+weknora auth login
+
+<span class="c"># 2) 以 MCP Server 方式运行</span>
+weknora mcp serve
+
+<span class="c"># 3) 在宿主 MCP 配置里注册</span>
+{ <span class="s">"mcpServers"</span>: { <span class="s">"weknora"</span>: {
+    <span class="s">"command"</span>: <span class="s">"weknora"</span>, <span class="s">"args"</span>: [<span class="s">"mcp"</span>, <span class="s">"serve"</span>] } } }
+
+<span class="c"># 其它运行方式</span>
+python main.py            <span class="c"># 推荐入口</span>
+uvx --from tencent-weknora-mcp weknora-mcp-server</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MCP 工具清单 ================= -->
+    <section id="tools">
+      <div class="sec-head">
+        <span class="kicker">TOOL SURFACE</span>
+        <h2>MCP Server 工具清单（28 个）</h2>
+      </div>
+      <p class="sec-sub">来自 <code>mcp-server/weknora_mcp_server.py</code>，每个 <code>@mcp.tool()</code> 装饰的函数即为一个可被 AI 宿主调用的工具。支持按分类筛选与关键字搜索。</p>
+
+      <div class="toolbar">
+        <div class="chips" id="toolChips"></div>
+        <input id="toolSearch" type="search" placeholder="搜索工具名 / 描述 / 参数…">
+      </div>
+      <div class="tool-grid" id="toolGrid"></div>
+      <p class="empty" id="toolEmpty" style="display:none">没有匹配的工具</p>
+
+      <div class="callout ok" style="margin-top:18px">
+        <b>使用提示：</b><code>kb_id</code> 与 <code>agent_id</code> 既可以是 UUID，也可以是名称（会自动解析）；
+        调用 <code>chat</code> 时<b>务必传 knowledge_base_ids</b>，否则退化为纯 LLM 回答；
+        调用 <code>agent_chat</code> 前先用 <code>get_agent</code> 检查 <code>kb_selection_mode</code>，为 <code>none</code> 或空列表时必须显式传知识库。
+      </div>
+    </section>
+
+    <!-- ================= 内置 Agent 工具 ================= -->
+    <section id="agent-tools">
+      <div class="sec-head">
+        <span class="kicker">BUILT-IN TOOLS</span>
+        <h2>WeKnora Agent 自身的内置工具（24 个）</h2>
+      </div>
+      <p class="sec-sub">这些是 WeKnora 内部 ReAct Agent 可以调用的工具（<code>internal/agent/tools/definitions.go</code>），与 MCP 工具共同组成 Agent 的能力面。</p>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">检索与推理</h3>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <span class="tag m">thinking</span>
+            <span class="tag m">todo_write</span>
+            <span class="tag m">knowledge_search</span>
+            <span class="tag m">grep_chunks</span>
+            <span class="tag m">list_knowledge_chunks</span>
+            <span class="tag m">query_knowledge_graph</span>
+            <span class="tag m">get_document_info</span>
+            <span class="tag m">web_search</span>
+            <span class="tag m">web_fetch</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:12px">数据与技能</h3>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <span class="tag m">database_query</span>
+            <span class="tag m">data_analysis</span>
+            <span class="tag m">data_schema</span>
+            <span class="tag m">read_skill</span>
+            <span class="tag m">execute_skill_script</span>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1">
+          <h3 style="font-size:15px;margin-bottom:12px">Wiki 维护（10 个）</h3>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <span class="tag v">wiki_read_page</span>
+            <span class="tag v">wiki_search</span>
+            <span class="tag v">wiki_read_source_doc</span>
+            <span class="tag v">wiki_write_page</span>
+            <span class="tag v">wiki_replace_text</span>
+            <span class="tag v">wiki_rename_page</span>
+            <span class="tag v">wiki_delete_page</span>
+            <span class="tag v">wiki_flag_issue</span>
+            <span class="tag v">wiki_read_issue</span>
+            <span class="tag v">wiki_update_issue</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 服务启用 ================= -->
+    <section id="services">
+      <div class="sec-head">
+        <span class="kicker">SERVICES</span>
+        <h2>需要启用的服务</h2>
+      </div>
+      <p class="sec-sub">
+        WeKnora 用 Docker Compose 的 <b>profiles</b> 机制组织服务：不带 profile 的 5 个是<b>核心服务</b>，
+        其余按需通过 <code>--profile</code> 启用。选择下面的开关，会实时生成对应的启动命令。
+      </p>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">核心服务（默认启动）</h3>
+      <div class="grid g4" style="margin-bottom:26px">
+        <div class="feat">
+          <span class="ico">🖥️</span>
+          <h3>frontend</h3>
+          <p>Web 控制台 + 反向代理</p>
+          <p style="margin-top:8px"><span class="tag g">:80</span></p>
+        </div>
+        <div class="feat">
+          <span class="ico">⚙️</span>
+          <h3>app</h3>
+          <p>Go 后端：API、Agent、检索编排</p>
+          <p style="margin-top:8px"><span class="tag g">:8080</span></p>
+        </div>
+        <div class="feat">
+          <span class="ico">📄</span>
+          <h3>docreader</h3>
+          <p>文档解析服务（gRPC）</p>
+          <p style="margin-top:8px"><span class="tag g">:50051</span></p>
+        </div>
+        <div class="feat">
+          <span class="ico">🐘</span>
+          <h3>postgres</h3>
+          <p>元数据 + pgvector 向量检索</p>
+          <p style="margin-top:8px"><span class="tag g">:5432</span></p>
+        </div>
+        <div class="feat">
+          <span class="ico">⚡</span>
+          <h3>redis</h3>
+          <p>缓存 / 流式会话 / 任务队列</p>
+          <p style="margin-top:8px"><span class="tag g">:6379</span></p>
+        </div>
+      </div>
+
+      <h3 id="profiles" style="font-size:16px;color:#cfe0ff;margin:0 0 12px">可选服务 Profile</h3>
+      <div class="card" style="margin-bottom:26px">
+        <div class="builder">
+          <div class="prof-list" id="profList"></div>
+          <div>
+            <div class="code">
+              <div class="bar"><span class="fname">生成的启动命令</span><button class="copy">复制</button></div>
+              <pre id="profCmd">docker compose up -d</pre>
+            </div>
+          </div>
+        </div>
+        <div class="callout" style="margin-bottom:0">
+          <b>说明：</b><code>full</code> 会一次性拉起全部可选组件（含 sandbox 代码沙箱、odl-hybrid 解析器、searxng、minio、neo4j、qdrant、dex、langfuse 全家桶与 Python MCP 服务）。
+          单独启用某个 profile 更省资源，也可以组合，例如 <code>--profile neo4j --profile minio</code>。
+        </div>
+      </div>
+
+      <h3 id="env" style="font-size:16px;color:#cfe0ff;margin:0 0 12px">关键环境变量开关</h3>
+      <div class="tbl-wrap" style="margin-bottom:26px">
+        <table>
+          <thead>
+            <tr><th>变量</th><th>默认值</th><th>作用</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>RETRIEVE_DRIVER</code></td><td><code>postgres</code></td><td>检索后端：postgres / elasticsearch / opensearch / milvus / weaviate / qdrant / doris / tencent-vectordb</td></tr>
+            <tr><td><code>DB_DRIVER</code></td><td><code>postgres</code></td><td>主数据库驱动</td></tr>
+            <tr><td><code>STREAM_MANAGER_TYPE</code></td><td><code>redis</code></td><td>流式会话管理，多副本部署必需</td></tr>
+            <tr><td><code>REDIS_ADDR</code></td><td><code>redis:6379</code></td><td>Redis 地址；也用于 MCP 审批跨实例转发</td></tr>
+            <tr><td><code>STORAGE_TYPE</code></td><td><code>local</code></td><td>对象存储：local / minio / s3 / tos / oss / ks3 / obs</td></tr>
+            <tr><td><code>DOCREADER_ADDR</code></td><td><code>docreader:50051</code></td><td>文档解析服务地址</td></tr>
+            <tr><td><code>NEO4J_ENABLE</code></td><td><code>false</code></td><td>开启知识图谱（需同时配 <code>NEO4J_URI</code> / 用户名 / 密码，并启动 neo4j profile）</td></tr>
+            <tr><td><code>LANGFUSE_ENABLED</code></td><td><code>true</code></td><td>链路追踪开关，配合 <code>LANGFUSE_HOST</code> 使用</td></tr>
+            <tr><td><code>OIDC_AUTH_ENABLE</code></td><td><code>false</code></td><td>OIDC 单点登录（可配合 dex profile 做本地 IdP）</td></tr>
+            <tr><td><code>GRPC_TLS_ENABLED</code></td><td><code>false</code></td><td>app ↔ docreader 之间的 gRPC TLS</td></tr>
+            <tr><td><code>WEKNORA_TENANT_ENABLE_RBAC</code></td><td><code>true</code></td><td>工作空间 RBAC 权限体系</td></tr>
+            <tr><td><code>WEKNORA_TENANT_SELF_SERVICE_CREATION_ENABLED</code></td><td><code>true</code></td><td>允许用户自助创建空间</td></tr>
+            <tr><td><code>WEKNORA_HOUSEKEEPING_ENABLED</code></td><td><code>true</code></td><td>后台清理与维护任务</td></tr>
+            <tr><td><code>WEKNORA_AGENT_TOOL_APPROVAL_TIMEOUT</code></td><td><code>600</code></td><td>MCP 危险工具人工审核等待秒数</td></tr>
+            <tr><td><code>OLLAMA_BASE_URL</code></td><td><code>http://host.docker.internal:11434</code></td><td>使用本地 Ollama 模型时必配</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:16px;color:#cfe0ff;margin:0 0 12px">服务访问地址</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>服务</th><th>地址</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr><td>Web UI</td><td><code>http://localhost</code></td><td>默认入口</td></tr>
+            <tr><td>后端 API</td><td><code>http://localhost:8080</code></td><td>REST API / Swagger</td></tr>
+            <tr><td>Langfuse 追踪</td><td><code>http://localhost:3000</code></td><td>需 <code>--profile langfuse</code></td></tr>
+            <tr><td>Neo4j 控制台</td><td><code>http://localhost:7474</code></td><td>需 <code>--profile neo4j</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 快速上手 ================= -->
+    <section id="quickstart">
+      <div class="sec-head">
+        <span class="kicker">QUICK START</span>
+        <h2>快速上手</h2>
+      </div>
+
+      <div class="grid g2">
+        <div class="code">
+          <div class="bar"><span class="fname">1. 启动服务</span><button class="copy">复制</button></div>
+<pre>git clone https://github.com/Tencent/WeKnora.git
+<span class="f">cd</span> WeKnora
+<span class="f">cp</span> .env.example .env     <span class="c"># 按注释修改配置</span>
+docker compose up -d     <span class="c"># 核心服务</span>
+
+<span class="c"># 需要全部功能时</span>
+docker compose --profile full up -d
+
+<span class="c"># 访问</span>
+<span class="c"># Web UI   http://localhost</span>
+<span class="c"># Backend  http://localhost:8080</span></pre>
+        </div>
+        <div class="code">
+          <div class="bar"><span class="fname">2. 开发模式（改代码不用重建镜像）</span><button class="copy">复制</button></div>
+<pre><span class="c"># 启动基础设施</span>
+make dev-start
+
+<span class="c"># 启动后端（新终端，Air 热重载）</span>
+make dev-app
+
+<span class="c"># 启动前端（新终端，Vite 热更新）</span>
+make dev-frontend</pre>
+        </div>
+        <div class="code">
+          <div class="bar"><span class="fname">3. 用 CLI 驱动</span><button class="copy">复制</button></div>
+<pre>weknora profile add prod --host https://kb.example.com --use
+weknora auth login
+weknora kb list
+weknora link --kb my-knowledge-base   <span class="c"># 绑定当前目录</span>
+weknora doc upload notes.md
+weknora chat <span class="s">"summarise the design doc"</span></pre>
+        </div>
+        <div class="code">
+          <div class="bar"><span class="fname">4. 校验改动</span><button class="copy">复制</button></div>
+<pre>git fetch origin main
+git diff --check origin/main...HEAD
+golangci-lint run --new-from-rev=origin/main ./...
+go test ./path/to/changed/package -count=1
+
+<span class="c"># 完整门禁</span>
+make fmt &amp;&amp; make lint &amp;&amp; make test</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 注意事项 ================= -->
+    <section id="notes">
+      <div class="sec-head">
+        <span class="kicker">NOTES</span>
+        <h2>注意事项与安全建议</h2>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:10px">部署安全</h3>
+          <ul style="margin:0;padding-left:19px;font-size:13.3px;color:var(--muted);line-height:1.9">
+            <li>从 v0.1.3 起内置登录认证；生产环境建议部署在<b>内网/私有网络</b>，不要直接暴露公网</li>
+            <li>配置防火墙规则与访问控制，定期升级获取安全补丁</li>
+            <li>API Key / MCP 凭据落库时 AES-256-GCM 加密，但仍需妥善保管数据库访问权限</li>
+            <li>MCP 建议单独创建<b>最小权限</b>的 API Key 并定期轮换</li>
+            <li>内置 MCP 服务的 URL / 认证信息在前端会被隐藏，但数据库原始数据仍存在</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:10px">MCP 使用要点</h3>
+          <ul style="margin:0;padding-left:19px;font-size:13.3px;color:var(--muted);line-height:1.9">
+            <li>传输方式优先 SSE（流式体验），标准兼容选 HTTP Streamable，本地调试用 Stdio</li>
+            <li>内置 MCP 服务仅支持 <code>sse</code> 与 <code>http-streamable</code>，<code>stdio</code> 在服务端被禁用</li>
+            <li>公网/第三方服务适当提高 <code>retry_count</code> 与 <code>retry_delay</code>，避免间歇超时中断 Agent</li>
+            <li>危险工具开启「需人工审核」，审批等待状态保存在进程内存，多副本需 Redis 支撑</li>
+            <li>内置 MCP 服务需通过 SQL 直插数据库并设置 <code>is_builtin = true</code>，不可在前端编辑删除</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">
+      WeKnora 项目可视化总览 · 基于仓库 v0.7.1 源码与文档整理<br>
+      资料来源：README.md · docs/ · mcp-server/ · docker-compose.yml · .env.example
+    </p>
+
+  </main>
+</div>
+
+<script>
+/* ============ Tabs ============ */
+document.querySelectorAll('.tab').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    var id = tab.getAttribute('data-tab');
+    var group = tab.parentElement;
+    group.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    group.parentElement.querySelectorAll('.tab-panel').forEach(function (p) {
+      p.classList.toggle('active', p.id === id);
+    });
+  });
+});
+
+/* ============ MCP 工具数据 ============ */
+var MCP_TOOLS = [
+  // 空间管理
+  { n: 'create_tenant', c: '空间管理', d: '创建一个新空间（租户），可自定义检索器引擎组合', p: 'name, description, business, retriever_engines?' },
+  { n: 'list_tenants', c: '空间管理', d: '列出所有空间', p: '—' },
+  // 知识库
+  { n: 'create_knowledge_base', c: '知识库', d: '创建知识库，内置默认分块配置（size 1000 / overlap 200 / 多模态开启）', p: 'name, description, embedding_model_id?, summary_model_id?' },
+  { n: 'list_knowledge_bases', c: '知识库', d: '列出所有知识库，用于发现可用 kb_id', p: '—' },
+  { n: 'get_knowledge_base', c: '知识库', d: '获取知识库详情', p: 'kb_id' },
+  { n: 'delete_knowledge_base', c: '知识库', d: '删除知识库', p: 'kb_id' },
+  { n: 'hybrid_search', c: '知识库', d: '向量 + 关键词混合检索；kb_id 支持 UUID 或知识库名称（自动解析）', p: 'kb_id, query, vector_threshold=0.5, keyword_threshold=0.3, match_count=5' },
+  // 知识 / 文档
+  { n: 'create_knowledge_from_file', c: '知识文档', d: '从服务器本地文件创建知识条目', p: 'kb_id, file_path, enable_multimodel=True' },
+  { n: 'create_knowledge_from_url', c: '知识文档', d: '从网页 URL 创建知识条目', p: 'kb_id, url, enable_multimodel=True' },
+  { n: 'list_knowledge', c: '知识文档', d: '分页列出知识库中的知识条目', p: 'kb_id, page=1, page_size=20' },
+  { n: 'get_knowledge', c: '知识文档', d: '获取知识条目详情', p: 'knowledge_id' },
+  { n: 'delete_knowledge', c: '知识文档', d: '删除知识条目', p: 'knowledge_id' },
+  // 模型
+  { n: 'create_model', c: '模型', d: '创建模型配置，type 可选 KnowledgeQA / Embedding / Rerank', p: 'name, type, description, source=local, base_url?, api_key?, is_default?' },
+  { n: 'list_models', c: '模型', d: '列出所有模型配置', p: '—' },
+  { n: 'get_model', c: '模型', d: '获取模型详情', p: 'model_id' },
+  // 会话
+  { n: 'create_session', c: '会话', d: '创建绑定知识库与检索策略的会话；kb_id 支持名称自动解析', p: 'kb_id, max_rounds=5, enable_rewrite=True, fallback_response?, summary_model_id?, title?, description?' },
+  { n: 'get_session', c: '会话', d: '获取会话详情', p: 'session_id' },
+  { n: 'list_sessions', c: '会话', d: '分页列出聊天会话', p: 'page=1, page_size=20' },
+  { n: 'delete_session', c: '会话', d: '删除会话', p: 'session_id' },
+  // 对话
+  { n: 'chat', c: '对话', d: 'RAG 流水线问答：先检索相关分块再交给 LLM 总结。务必传 knowledge_base_ids，否则退化为纯 LLM 回答', p: 'session_id, query, knowledge_base_ids?, web_search_enabled=False' },
+  { n: 'agent_chat', c: '对话', d: 'Agent 流水线问答：Agent 自主调用知识检索 / 联网搜索 / SQL 等工具。需 agent_id；若 Agent 的 kb_selection_mode 为 none 或空列表，必须显式传知识库', p: 'session_id, query, agent_id, knowledge_base_ids?, web_search_enabled=False' },
+  // Agent
+  { n: 'list_agents', c: 'Agent', d: '列出当前空间可用的自定义 Agent，用于发现 agent_id 与其知识库选择模式', p: 'page=1, page_size=50' },
+  { n: 'get_agent', c: 'Agent', d: '获取单个 Agent 完整配置；重点检查 kb_selection_mode 与 knowledge_bases', p: 'agent_id' },
+  // 分块
+  { n: 'list_chunks', c: '分块', d: '列出知识条目的文本分块', p: 'knowledge_id, page=1, page_size=20' },
+  { n: 'delete_chunk', c: '分块', d: '删除指定文本分块', p: 'knowledge_id, chunk_id' },
+  // Wiki
+  { n: 'wiki_search', c: 'Wiki', d: '全文检索 Wiki 页面，返回标题、slug、摘要与内容片段', p: 'kb_id, query, limit=10' },
+  { n: 'wiki_read_page', c: 'Wiki', d: '按 slug 读取 Wiki 页面完整 Markdown、元数据、出入链与来源引用（如 entity/acme-corp）', p: 'kb_id, slug' },
+  { n: 'wiki_index_view', c: 'Wiki', d: '获取结构化 Wiki 索引，按页面类型（entity / concept / summary…）分组', p: 'kb_id, limit=50' }
+];
+
+var CATS = ['全部', '空间管理', '知识库', '知识文档', '模型', '会话', '对话', 'Agent', '分块', 'Wiki'];
+var activeCat = '全部';
+var keyword = '';
+
+var chipsEl = document.getElementById('toolChips');
+var gridEl = document.getElementById('toolGrid');
+var emptyEl = document.getElementById('toolEmpty');
+var searchEl = document.getElementById('toolSearch');
+
+CATS.forEach(function (c) {
+  var b = document.createElement('button');
+  b.className = 'chip' + (c === '全部' ? ' active' : '');
+  b.textContent = c + (c === '全部' ? ' (' + MCP_TOOLS.length + ')' : '');
+  b.addEventListener('click', function () {
+    activeCat = c;
+    chipsEl.querySelectorAll('.chip').forEach(function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    renderTools();
+  });
+  chipsEl.appendChild(b);
+});
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m];
+  });
+}
+
+function renderTools() {
+  var kw = keyword.trim().toLowerCase();
+  var list = MCP_TOOLS.filter(function (t) {
+    var okCat = activeCat === '全部' || t.c === activeCat;
+    var okKw = !kw || (t.n + ' ' + t.d + ' ' + t.p + ' ' + t.c).toLowerCase().indexOf(kw) !== -1;
+    return okCat && okKw;
+  });
+  gridEl.innerHTML = list.map(function (t) {
+    return '<div class="tool">' +
+      '<div class="th"><span class="tn">' + esc(t.n) + '</span><span class="tag m">' + esc(t.c) + '</span></div>' +
+      '<p class="td">' + esc(t.d) + '</p>' +
+      '<p class="tp">' + esc(t.p) + '</p>' +
+      '</div>';
+  }).join('');
+  emptyEl.style.display = list.length ? 'none' : 'block';
+}
+searchEl.addEventListener('input', function (e) { keyword = e.target.value; renderTools(); });
+renderTools();
+
+/* ============ Profile 构建器 ============ */
+var PROFILES = [
+  { id: 'full', t: 'full', d: '一次性启用全部可选功能组件', s: 'sandbox · odl-hybrid · searxng · minio · neo4j · qdrant · dex · langfuse · mcp' },
+  { id: 'neo4j', t: 'neo4j', d: '知识图谱（Neo4j）', s: 'neo4j · 控制台 :7474' },
+  { id: 'minio', t: 'minio', d: '对象存储（MinIO）', s: 'minio' },
+  { id: 'langfuse', t: 'langfuse', d: '链路追踪与可观测性', s: 'langfuse-db-init · clickhouse · minio · worker · web (:3000)' },
+  { id: 'searxng', t: 'searxng', d: '自建元搜索引擎', s: 'searxng-init · searxng' },
+  { id: 'qdrant', t: 'qdrant', d: '向量数据库 Qdrant', s: 'qdrant' },
+  { id: 'milvus', t: 'milvus', d: '向量数据库 Milvus', s: 'milvus' },
+  { id: 'weaviate', t: 'weaviate', d: '向量数据库 Weaviate', s: 'weaviate' },
+  { id: 'doris', t: 'doris', d: 'Apache Doris 分析型数据库', s: 'doris-fe · doris-be' },
+  { id: 'dex', t: 'dex', d: 'OIDC 身份提供者（测试用）', s: 'dex' }
+];
+var selected = {};
+var profListEl = document.getElementById('profList');
+var profCmdEl = document.getElementById('profCmd');
+
+PROFILES.forEach(function (p) {
+  var label = document.createElement('label');
+  label.className = 'prof';
+  label.innerHTML = '<input type="checkbox" data-id="' + p.id + '">' +
+    '<span><span class="pt">--profile ' + esc(p.t) + '</span>' +
+    '<div class="pd">' + esc(p.d) + '</div>' +
+    '<div class="ps">' + esc(p.s) + '</div></span>';
+  var cb = label.querySelector('input');
+  cb.addEventListener('change', function () {
+    selected[p.id] = cb.checked;
+    label.classList.toggle('on', cb.checked);
+    updateCmd();
+  });
+  profListEl.appendChild(label);
+});
+
+function updateCmd() {
+  var picked = PROFILES.filter(function (p) { return selected[p.id]; }).map(function (p) { return p.id; });
+  var cmd = 'docker compose';
+  picked.forEach(function (id) { cmd += ' --profile ' + id; });
+  cmd += ' up -d';
+  profCmdEl.textContent = cmd;
+}
+updateCmd();
+
+/* ============ 复制按钮 ============ */
+document.querySelectorAll('.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var box = btn.closest('.code');
+    var text = box.querySelector('pre').innerText;
+    function done() {
+      var old = btn.textContent;
+      btn.textContent = '已复制';
+      btn.classList.add('ok');
+      setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+    } else {
+      fallback(text, done);
+    }
+  });
+});
+function fallback(text, cb) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  cb();
+}
+
+/* ============ 滚动高亮 ============ */
+var anchors = Array.prototype.slice.call(document.querySelectorAll('.sidebar a'));
+var sections = anchors.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+function onScroll() {
+  var y = window.scrollY + 120;
+  var idx = 0;
+  sections.forEach(function (s, i) { if (s && s.offsetTop <= y) idx = i; });
+  anchors.forEach(function (a, i) { a.classList.toggle('active', i === idx); });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+</script>
+</body>
+</html>
