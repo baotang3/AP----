@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>六阶段 POC 能力 · 设计文档 · AP_Hub</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b2130; --ink2:#4a5568; --ink3:#7b8794;
+  --line:#e3e7ee; --line2:#eef1f6; --accent:#2f6df6; --accent-soft:#eaf0ff;
+  --ok:#1f9254; --warn:#b7791f; --unk:#b5477a; --star:#d9480f;
+  --code-bg:#1d2432; --code-ink:#dbe3f0; --path:#0b6e99;
+  --maxw:920px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.78 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40; background:rgba(255,255,255,.92);
+  backdrop-filter:saturate(1.6) blur(10px); border-bottom:1px solid var(--line);
+}
+.topbar-in{max-width:1320px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;gap:16px}
+.brand{font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.brand .v{color:var(--accent);font-weight:600;margin-left:6px;font-size:12.5px;
+  background:var(--accent-soft);padding:2px 7px;border-radius:5px;border:1px solid #d6e2ff}
+.spacer{flex:1}
+.search{position:relative}
+.search input{
+  width:230px;padding:7px 11px 7px 30px;border:1px solid var(--line);border-radius:8px;
+  background:#fff;font-size:13px;color:var(--ink);outline:none;transition:.16s
+}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);width:280px}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4}
+.tbtn{
+  border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;
+  font-size:12.5px;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:.16s
+}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.hint{font-size:12px;color:var(--ink3);white-space:nowrap}
+
+/* ---------- 布局 ---------- */
+.shell{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:290px minmax(0,1fr);gap:34px;padding:28px 22px 90px}
+nav.toc{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 84px);overflow-y:auto;padding-right:8px}
+nav.toc::-webkit-scrollbar{width:7px}
+nav.toc::-webkit-scrollbar-thumb{background:#d5dbe6;border-radius:4px}
+.toc-t{font-size:11px;font-weight:700;letter-spacing:.11em;color:var(--ink3);text-transform:uppercase;margin:0 0 10px 10px}
+.toc a{
+  display:block;padding:6px 10px;border-radius:7px;color:var(--ink2);text-decoration:none;
+  font-size:13.4px;line-height:1.45;border-left:2px solid transparent;transition:.13s
+}
+.toc a:hover{background:#fff;color:var(--ink)}
+.toc a.lvl1{font-weight:650;color:var(--ink);margin-top:9px}
+.toc a.lvl1 .cap{display:block;font-size:11.5px;font-weight:400;color:var(--ink3);margin-top:1px}
+.toc a.lvl2{padding-left:20px;font-size:12.9px}
+.toc a.active{background:var(--accent-soft);color:var(--accent);border-left-color:var(--accent)}
+.toc a.hidden{display:none}
+
+/* ---------- 正文 ---------- */
+main{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:38px 46px 60px;max-width:var(--maxw);box-shadow:0 1px 2px rgba(20,30,60,.04)}
+h1{font-size:27px;line-height:1.32;margin:0 0 6px;letter-spacing:-.2px}
+h1:not(:first-child){margin-top:8px;padding-top:30px;border-top:2px solid var(--line)}
+h2{font-size:19.5px;margin:30px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line2);letter-spacing:-.1px}
+h3{font-size:16px;margin:22px 0 9px;color:var(--ink)}
+h4{font-size:14px;margin:18px 0 7px;color:var(--ink2)}
+p{margin:11px 0;color:var(--ink2)}
+main>p:first-of-type,main p{color:var(--ink2)}
+strong{color:var(--ink);font-weight:650}
+em{color:var(--ink);font-style:normal;background:linear-gradient(transparent 62%,#fff2c9 62%);padding:0 1px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.anchor{opacity:0;margin-left:8px;font-weight:400;color:var(--ink3);font-size:.8em}
+h1:hover .anchor,h2:hover .anchor,h3:hover .anchor{opacity:1}
+hr.rule{border:0;border-top:1px solid var(--line2);margin:30px 0}
+ul,ol{margin:10px 0;padding-left:23px;color:var(--ink2)}
+li{margin:5px 0}
+li>strong:first-child{color:var(--ink)}
+
+code{
+  font:13px/1.6 ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  background:#f1f3f8;border:1px solid #e4e8f0;border-radius:4px;padding:1px 5px;color:#33405a;
+  word-break:break-word
+}
+.path{color:var(--path);font-weight:500}
+.conf{font-style:normal}
+.tag{white-space:nowrap}
+
+/* 代码块 */
+.codewrap{margin:14px 0;border-radius:10px;overflow:hidden;border:1px solid #2a3346}
+.codetag{background:#151b27;color:#7c8ba6;font:11px/1 ui-monospace,Consolas,monospace;letter-spacing:.1em;padding:7px 14px;text-transform:uppercase;border-bottom:1px solid #2a3346}
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);padding:15px 17px;overflow-x:auto;
+  font:12.6px/1.72 ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,"Liberation Mono",monospace}
+pre.code code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+
+/* 表格 */
+.tablewrap{margin:15px 0;overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.3px;background:#fff}
+th{background:#f4f6fa;text-align:left;font-weight:650;color:var(--ink);padding:9px 13px;
+   border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+td{padding:9px 13px;border-bottom:1px solid var(--line2);color:var(--ink2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#fafbfe}
+td code{font-size:12.4px}
+
+/* 引用 */
+blockquote{margin:15px 0;padding:12px 16px;background:#fbfcfe;border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0;color:var(--ink2)}
+blockquote p{margin:6px 0}
+blockquote strong{color:var(--ink)}
+blockquote blockquote{border-left-color:var(--line);background:#f8f9fb}
+
+/* 搜索命中 */
+mark.hit{background:#ffe9a8;color:inherit;border-radius:3px;padding:0 2px}
+.hidden{display:none!important}
+
+/* 回到顶部 */
+.totop{position:fixed;right:26px;bottom:26px;width:42px;height:42px;border-radius:50%;
+  border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-size:17px;
+  box-shadow:0 2px 10px rgba(20,30,60,.1);opacity:0;pointer-events:none;transition:.2s}
+.totop.on{opacity:1;pointer-events:auto}
+.totop:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 窄屏 */
+@media (max-width:1080px){
+  .shell{grid-template-columns:1fr;gap:18px}
+  nav.toc{position:static;max-height:none;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px}
+  main{padding:26px 20px 44px;border-radius:12px}
+  .search input{width:150px}
+  .search input:focus{width:190px}
+}
+@media print{
+  .topbar,nav.toc,.totop,.anchor{display:none!important}
+  .shell{display:block;padding:0}
+  main{border:0;box-shadow:none;max-width:none;padding:0}
+  h1:not(:first-child){page-break-before:always}
+  .tablewrap,pre.code{page-break-inside:avoid}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">六阶段 POC 能力 · 设计文档</div>
+    <div class="spacer"></div>
+    <span class="hint" id="hint"></span>
+    <div class="search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.4">
+        <circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/>
+      </svg>
+      <input id="q" type="search" placeholder="搜索（按 / 聚焦）" aria-label="搜索文档">
+    </div>
+    <button class="tbtn" onclick="window.print()">打印 / PDF</button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="目录">
+    <p class="toc-t">目录</p>
+    <a class="lvl1" href="#六阶段-poc-能力-设计文档" data-id="六阶段-poc-能力-设计文档">六阶段 POC 能力 · 设计文档</a><a class="lvl2" href="#一页看懂" data-id="一页看懂">一页看懂</a><a class="lvl1" href="#第一章-定位与目标" data-id="第一章-定位与目标">第一章 · 定位与目标<span class="cap">做什么、为什么在 AP_Hub 上做、边界在哪</span></a><a class="lvl2" href="#1.1-要做的事" data-id="1.1-要做的事">1.1 要做的事</a><a class="lvl2" href="#1.2-为什么在-ap_hub-上做-而不是新建服务" data-id="1.2-为什么在-ap_hub-上做-而不是新建服务">1.2 为什么在 AP_Hub 上做，而不是新建服务</a><a class="lvl2" href="#1.3-核心思路-三条" data-id="1.3-核心思路-三条">1.3 核心思路：三条</a><a class="lvl2" href="#1.4-边界" data-id="1.4-边界">1.4 边界</a><a class="lvl2" href="#1.5-交付节奏" data-id="1.5-交付节奏">1.5 交付节奏</a><a class="lvl1" href="#第二章-总体架构设计" data-id="第二章-总体架构设计">第二章 · 总体架构设计<span class="cap">总体架构、数据流、阶段映射、架构落地到哪些文件</span></a><a class="lvl2" href="#2.1-总体架构" data-id="2.1-总体架构">2.1 总体架构</a><a class="lvl2" href="#2.2-一次阶段执行的数据流" data-id="2.2-一次阶段执行的数据流">2.2 一次阶段执行的数据流</a><a class="lvl2" href="#2.3-六阶段-=-六个内置技能" data-id="2.3-六阶段-=-六个内置技能">2.3 六阶段 = 六个内置技能</a><a class="lvl2" href="#2.4-为什么需要新增编排层与阶段定义" data-id="2.4-为什么需要新增编排层与阶段定义">2.4 为什么需要新增编排层与阶段定义</a><a class="lvl2" href="#2.5-架构落地到哪些文件" data-id="2.5-架构落地到哪些文件">2.5 架构落地到哪些文件</a><a class="lvl2" href="#2.6-六个技能包逐文件说明" data-id="2.6-六个技能包逐文件说明">2.6 六个技能包逐文件说明</a><a class="lvl2" href="#2.7-规模小结" data-id="2.7-规模小结">2.7 规模小结</a><a class="lvl1" href="#第三章-具体功能点实现" data-id="第三章-具体功能点实现">第三章 · 具体功能点实现<span class="cap">七个功能组，逐条给出文件路径与新增/原有/移植</span></a><a class="lvl2" href="#3.1-阶段与内置技能的编排" data-id="3.1-阶段与内置技能的编排">3.1 阶段与内置技能的编排</a><a class="lvl2" href="#3.2-阶段执行与流式输出" data-id="3.2-阶段执行与流式输出">3.2 阶段执行与流式输出</a><a class="lvl2" href="#3.3-访谈与本体" data-id="3.3-访谈与本体">3.3 访谈与本体</a><a class="lvl2" href="#3.4-产物" data-id="3.4-产物">3.4 产物</a><a class="lvl2" href="#3.5-产物生成" data-id="3.5-产物生成">3.5 产物生成</a><a class="lvl2" href="#3.6-技能集市" data-id="3.6-技能集市">3.6 技能集市</a><a class="lvl2" href="#3.7-只做接口的部分" data-id="3.7-只做接口的部分">3.7 只做接口的部分</a><a class="lvl2" href="#附-一期最小闭环" data-id="附-一期最小闭环">附：一期最小闭环</a><a class="lvl2" href="#附-主要风险" data-id="附-主要风险">附：主要风险</a><a class="lvl2" href="#附-可行性核对-对照既有代码逐条验证" data-id="附-可行性核对-对照既有代码逐条验证">附：可行性核对（对照既有代码逐条验证）</a>
+  </nav>
+  <main>
+<h1 id="六阶段-poc-能力-设计文档-2">六阶段 POC 能力 · 设计文档<a class="anchor" href="#六阶段-poc-能力-设计文档-2" aria-label="锚点">#</a></h1><blockquote><p><strong>一句话</strong>：在 <code>AP_Hub</code> 平台上，把 <code>dorbit_ai</code> 的六阶段 POC 方法论做成<strong>六个项目内置技能 ＋ 一个编排层</strong>，执行全部交给既有的 <strong>Claude Agent SDK</strong>，产物按时间归到既有的产出物机制里。</p></blockquote><h2 id="一页看懂-2">一页看懂<a class="anchor" href="#一页看懂-2" aria-label="锚点">#</a></h2><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>┌──────────────────────────────────────────────────────────────────────┐
+│  这个设计有多大                                                       │
+│                                                                      │
+│    六阶段能力          →   六个项目内置技能（复用 Claude SDK 执行）      │
+│    既有文件改动        →   5 处，均为增量，不影响既有行为                │
+│    新增数据库表        →   0 张                                        │
+│    新增数据库列        →   0 处                                        │
+│    生成器代码移植      →   0 行（只搬提示词）                           │
+│    前端改动            →   0 行                                        │
+│    新增后端代码        →   约 1,000 行                                  │
+│    移植提示词          →   约 1,302 行                                  │
+└──────────────────────────────────────────────────────────────────────┘</code></pre></div><div class="tablewrap"><table><thead><tr><th>章节</th><th>内容</th></tr></thead><tbody><tr><td><strong>第一章 · 定位与目标</strong></td><td>做什么、为什么在 <code>AP_Hub</code> 上做、边界在哪</td></tr><tr><td><strong>第二章 · 总体架构设计</strong></td><td>总体架构、数据流、内置技能、<strong>为什么新增编排层</strong>、<strong>架构落地到哪些文件</strong>、技能包逐文件说明</td></tr><tr><td><strong>第三章 · 具体功能点实现</strong></td><td>七个功能组，<strong>每组的文件路径与新增 / 原有 / 移植标记</strong></td></tr></tbody></table></div><h3 id="全文标记约定">全文标记约定<a class="anchor" href="#全文标记约定" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>标记</th><th>含义</th></tr></thead><tbody><tr><td><code class="tag">【新增】</code></td><td>本次全新编写</td></tr><tr><td><code class="tag">【原有】</code></td><td><code>AP_Hub</code> 既有能力，直接复用</td></tr><tr><td><code class="tag">【移植】</code></td><td>逻辑与内容来自 <code>dorbit_ai</code>，落到 <code>AP_Hub</code></td></tr><tr><td><code class="tag">【改动】</code></td><td>既有文件，做增量修改</td></tr></tbody></table></div><h3 id="根地址代号">根地址代号<a class="anchor" href="#根地址代号" aria-label="锚点">#</a></h3><p>后文文件路径以代号为前缀，避免重复长路径。</p><div class="tablewrap"><table><thead><tr><th>代号</th><th>绝对路径</th></tr></thead><tbody><tr><td><code>[APP]</code></td><td><code>C:\AP-dorbit-ai\AP_Hub\ap_agent\backend\app\</code></td></tr><tr><td><code>[UI]</code></td><td><code>C:\AP-dorbit-ai\AP_Hub\ap_agent_ui\src\</code></td></tr><tr><td><code>[INTERVIEW]</code></td><td><code>C:\dorbit_ai\service_ai_interview\</code></td></tr><tr><td><code>[QINWEN]</code></td><td><code>C:\dorbit_ai\service_ai_qinwen\</code></td></tr></tbody></table></div><hr class="rule"><h1 id="第一章-定位与目标-2">第一章 · 定位与目标<a class="anchor" href="#第一章-定位与目标-2" aria-label="锚点">#</a></h1><h2 id="1.1-要做的事-2">1.1 要做的事<a class="anchor" href="#1.1-要做的事-2" aria-label="锚点">#</a></h2><p><code>C:\dorbit_ai</code> 已实现一套完整的六阶段 POC 方法论。本次把它搬进 <code>AP_Hub</code>：</p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>① AI 访谈 ──▶ ② 业务流程 ──▶ ③ 业务需求 ──▶ ④ 原型设计 ──▶ ⑤ 数据库设计 ──▶ ⑥ 低代码 POC</code></pre></div><p>这六个阶段不是流水线的六道工序，而是<strong>六件可以独立做的事</strong>：</p><div class="tablewrap"><table><thead><tr><th>事实</th><th>含义</th></tr></thead><tbody><tr><td><strong>没有门禁</strong></td><td>不需要等①做完才能做②</td></tr><tr><td><strong>没有强制顺序</strong></td><td>可以直接做⑤数据库设计，完全跳过访谈</td></tr><tr><td><strong>上游是可选输入</strong></td><td>上游产物存在就注入，不存在就跳过，不报错</td></tr></tbody></table></div><p>这条「阶段彼此独立」是整个设计的<strong>前提</strong>，后文所有取舍都建立在它之上。</p><h2 id="1.2-为什么在-ap_hub-上做-而不是新建服务-2">1.2 为什么在 AP_Hub 上做，而不是新建服务<a class="anchor" href="#1.2-为什么在-ap_hub-上做-而不是新建服务-2" aria-label="锚点">#</a></h2><p>因为 <code>AP_Hub</code> <strong>已经具备全部所需能力</strong>，本次是把方法装载进去，不是再造一套平台。</p><div class="tablewrap"><table><thead><tr><th>六阶段需要什么</th><th><code>AP_Hub</code> 已有什么</th><th>标记</th></tr></thead><tbody><tr><td>能调工具、能读写文件、能追问的执行引擎</td><td><strong>Claude Agent SDK</strong> 引擎（<code>[APP]services\claude_agent_sdk_service.py</code>）</td><td><code class="tag">【原有】</code></td></tr><tr><td>阶段知识的装载</td><td>项目技能机制（<code>[APP]services\myskill_service.py</code>）</td><td><code class="tag">【原有】</code></td></tr><tr><td>项目默认就带这套技能</td><td>项目创建时的预置目录钩子（<code>[APP]services\project_service.py</code>）</td><td><code class="tag">【改动】</code></td></tr><tr><td>代码与脚本安全执行</td><td>沙箱（<code>[APP]services\docker_shell_backend.py</code>）</td><td><code class="tag">【原有】</code></td></tr><tr><td>产物落盘与展示</td><td>文件监控自动登记 ＋ <strong>四个画布</strong>（<code>[UI]views\plugins\</code>）</td><td><code class="tag">【原有】</code></td></tr><tr><td>断线不丢消息</td><td>执行总线（<code>[APP]services\run_manager.py</code>）</td><td><code class="tag">【原有】</code></td></tr><tr><td>权限与多租户</td><td>JWT / AAD ＋ <code>X-Workspace-Id</code></td><td><code class="tag">【原有】</code></td></tr><tr><td><strong>阶段怎么串、进度怎么算</strong></td><td><strong>无</strong></td><td><strong><code class="tag">【新增】</code></strong></td></tr></tbody></table></div><p><strong>结论</strong>：只有<strong>编排</strong>是新写的，其余全是既有的；方法论、本体、提示词是移植的。</p><h2 id="1.3-核心思路-三条-2">1.3 核心思路：三条<a class="anchor" href="#1.3-核心思路-三条-2" aria-label="锚点">#</a></h2><h3 id="思路一-复用-claude-agent-sdk-不另起执行引擎">思路一 · 复用 Claude Agent SDK，不另起执行引擎<a class="anchor" href="#思路一-复用-claude-agent-sdk-不另起执行引擎" aria-label="锚点">#</a></h3><p>六阶段本质上是「<strong>带工具、会读写文件、会追问</strong>」的 Agent 任务——SDK 已经把这些都做了。</p><p>而且既有 <code>/agent</code> 接口<strong>本来就接受 <code>skill_id</code></strong>：</p><div class="codewrap"><div class="codetag">python</div><pre class="code"><code># [APP]api\conversations.py（既有，本次不改）
+async def agent_chat(conversation_id, payload: DirectChatRequest, ...):
+    return _agent_chat_sse(conversation_id, payload.content, payload.model,
+                           payload.skill_id, settings, llm, ...)
+
+# [APP]services\claude_agent_sdk_service.py（既有，本次不改）
+async def _resolve_system_prompt(self, skill_id, project_id) -&gt; str:
+    ...
+    return default_prompt + skill_header + skill.md_content</code></pre></div><p><strong>这两段既有代码就是「六阶段按 skill 封装」的全部执行侧实现。</strong></p><h3 id="思路二-六阶段做成项目内置技能-不经技能集市">思路二 · 六阶段做成项目内置技能，不经技能集市<a class="anchor" href="#思路二-六阶段做成项目内置技能-不经技能集市" aria-label="锚点">#</a></h3><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>阶段的角色与工作流  →  SKILL.md      （追加到平台规则之后，成为该次执行的 system prompt）
+阶段的参考资料      →  references/   （产出规范、本体数据）
+阶段的确定性工作    →  scripts/      （结构校验）</code></pre></div><p><strong>六个技能是项目的默认组成部分</strong>，随项目创建自动装配——和既有的 <code>uploads/ skills/ results/</code> 三个预置目录同一时机、同一机制。<strong>不发布到技能集市</strong>：它们不是一个"可安装的能力包"，而是 POC 项目的固有组成部分。</p><p>阶段内部的「分析 → 抽取 → 提问」「分析 → 总结」<strong>不再做成后端阶段</strong>，退化为 <code>SKILL.md</code> 里的一段工作流说明，由模型在<strong>同一次执行内</strong>完成。后端因此不需要知道阶段内部有几小步。</p><h3 id="思路三-产物即文件-按时间归一">思路三 · 产物即文件，按时间归一<a class="anchor" href="#思路三-产物即文件-按时间归一" aria-label="锚点">#</a></h3><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>模型写出文件  ──▶  文件监控自动登记  ──▶  产物记录
+                                            │
+                            同一路径多次生成 ──▶ 多条记录，按时间排
+                                            │
+                                最新的一条 ＝ 当前产物</code></pre></div><p><strong>没有版本表，时间就是版本。</strong> 既有 <code>[APP]services\artifact_service.py</code> 已经在做「按路径去重保留最新 ＋ 记录改写次数」。</p><h2 id="1.4-边界-2">1.4 边界<a class="anchor" href="#1.4-边界-2" aria-label="锚点">#</a></h2><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>┌──────────────────────────┬──────────────────────────┬─────────────────────────┐
+│                          │  【原有】AP_Hub 提供       │  【移植】来自 dorbit_ai   │
+├──────────────────────────┼──────────────────────────┼─────────────────────────┤
+│ 执行引擎                  │  Claude Agent SDK        │  —                      │
+│ 阶段的知识                │  —                       │  SKILL.md · 本体         │
+│                          │                          │  产出规范与提示词          │
+│ 编排                      │  —                       │  —  【新增】编排层        │
+│ 产物落地                  │  文件监控 ＋ 四个画布      │  —                      │
+└──────────────────────────┴──────────────────────────┴─────────────────────────┘</code></pre></div><h3 id="明确不做">明确不做<a class="anchor" href="#明确不做" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>不做</th><th>原因</th></tr></thead><tbody><tr><td>不新建平台或旁路服务</td><td><code>AP_Hub</code> 已具备全部所需能力</td></tr><tr><td>不把六个技能发布到技能集市</td><td>它们是项目固有组成部分，不是可安装的能力包</td></tr><tr><td>不自动串跑六个阶段</td><td>与「阶段彼此独立、无门禁」冲突</td></tr><tr><td>不移植生成器的 Python 代码</td><td>生成器本身就是调大模型的薄包装，套娃且会断掉流式输出</td></tr><tr><td>不新增数据库表、不新增数据库列</td><td>产物按时间归到既有产出物表；进度从产物推导</td></tr><tr><td>不改前端</td><td>复用既有对话、流式通道、四个画布</td></tr><tr><td>不改既有业务逻辑</td><td><code>/agent</code> 已支持 <code>skill_id</code></td></tr><tr><td>不自建分享 / 知识库 / 低代码</td><td>只留接口位置，见 3.7</td></tr></tbody></table></div><h2 id="1.5-交付节奏-2">1.5 交付节奏<a class="anchor" href="#1.5-交付节奏-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>期</th><th>内容</th><th>可验证结果</th></tr></thead><tbody><tr><td><strong>一期</strong></td><td>② 业务流程技能包 ＋ 内置技能装配 ＋ 编排层 ＋ 端到端</td><td>新建项目自动带六个技能，对话里跑出产物，<strong>画布渲染出来</strong></td></tr><tr><td><strong>二期</strong></td><td>① 访谈（含本体）＋ ③④⑤ 技能包</td><td>六个阶段都能跑出产物</td></tr><tr><td><strong>三期</strong></td><td>第十章接口桩</td><td>全链路可用</td></tr></tbody></table></div><blockquote><p>一期选 ② 的理由：上游恒为空（正好验证阶段独立性）、产出规范已定位、产物是 YAML（正好验证画布契约）、不需要追问（交互最简单）。</p></blockquote><hr class="rule"><h1 id="第二章-总体架构设计-2">第二章 · 总体架构设计<a class="anchor" href="#第二章-总体架构设计-2" aria-label="锚点">#</a></h1><h2 id="2.1-总体架构-2">2.1 总体架构<a class="anchor" href="#2.1-总体架构-2" aria-label="锚点">#</a></h2><p><strong>每个框都标注了它是新增、原有还是移植。</strong></p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>┌──────────────────────────────────────────────────────────────────────────┐
+│              浏览器 · 前端  【原有】零改动                                  │
+│   工作台三栏布局 · 对话与步骤时间线 · 四个画布 · 技能列表 · DML 编辑器       │
+└────────────────────────────────┬─────────────────────────────────────────┘
+                                 │ HTTP / SSE（Bearer JWT + X-Workspace-Id）
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    FastAPI 应用层（既有单体容器）                          │
+│                                                                          │
+│  ┌──────────────────────┐  ┌────────────┐  ┌────────────────────────┐    │
+│  │ API 路由层            │  │ 认证中间件  │  │ 全局异常处理            │    │
+│  │ 【原有】12 个路由模块  │  │ 【原有】    │  │ 【原有】                │    │
+│  │   71 个端点           │  │ JWT / AAD  │  │ register_handlers      │    │
+│  │ 【新增】poc.py 3 端点 │  └────────────┘  └────────────────────────┘    │
+│  └──────────┬───────────┘                                                │
+│             │                                                            │
+│  ┌──────────▼───────────────────────────────────────────────────────┐    │
+│  │ 依赖注入层  【原有】deps.py  【改动】注册编排层与装配器工厂          │    │
+│  └──────────┬───────────────────────────────────────────────────────┘    │
+│             │                                                            │
+│  ┌──────────▼───────────────────────────────────────────────────────┐    │
+│  │ Service 层                                                        │    │
+│  │                                                                   │    │
+│  │  ┌───────────────────────────────┐  ┌─────────────────────────┐   │    │
+│  │  │ 【新增】POC 编排               │  │ 【原有】平台服务          │   │    │
+│  │  │  poc_orchestrator.py          │  │  对话 / 消息 / 文件       │   │    │
+│  │  │   阶段定义与进度推导            │  │  产物 / 技能 / 项目       │   │    │
+│  │  │   Skill 绑定 · 上下文组装       │  │  工作空间 / 权限          │   │    │
+│  │  │  poc_skill_provisioner.py     │  │  执行总线 / 沙箱          │   │    │
+│  │  │   内置技能装配（幂等）          │  │                         │   │    │
+│  │  │  【改动】project_service.py    │  │                         │   │    │
+│  │  │   项目创建时调用装配            │  │                         │   │    │
+│  │  └───────────────┬───────────────┘  └─────────────────────────┘   │    │
+│  └──────────────────┼────────────────────────────────────────────────┘    │
+│                     │ skill_id ＋ 阶段启动消息（只给产物路径）              │
+│  ┌──────────────────▼────────────────────────────────────────────────┐   │
+│  │ 【原有】★ Agent 引擎层 · claude_agent_sdk_service.py（2,684 行）    │   │
+│  │                                                                   │   │
+│  │   system_prompt ＝ 平台规则 ＋ 【移植】SKILL.md（该阶段的方法论）    │   │
+│  │   工具：Read / Write / Edit / Glob / Grep / Bash                   │   │
+│  │   AskUserQuestion ──▶ 访谈提问（既有追问机制，无需自建）             │   │
+│  └────┬────────────────────┬──────────────────────┬─────────────────┘   │
+│       │                    │                      │                     │
+│  ┌────▼─────┐   ┌──────────▼─────────┐   ┌────────▼───────────────┐    │
+│  │ 沙箱容器  │   │ FileWatcherService │   │ RunManager             │    │
+│  │ 【原有】  │   │ 【原有】★           │   │ 【原有】★               │    │
+│  │ 项目隔离  │   │ 写文件→产物         │   │ 序号·回放·单活跃保护     │    │
+│  └──────────┘   └──────────┬─────────┘   └────────┬───────────────┘    │
+│                            │                      │                     │
+│  ┌──────────────┐   ┌──────▼──────────────────────▼───────────────┐    │
+│  │ MySQL 8.0    │   │ 项目工作空间文件系统                          │    │
+│  │ 【原有】      │   │  skills/poc-*/    【移植】六个内置技能         │    │
+│  │ 15 张表       │   │  results/NN-…/    【新增】产物文件             │    │
+│  │ 0 新表 0 新列 │   └─────────────────────────────────────────────┘    │
+│  └──────────────┘                                                       │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   ▲ 只读 · 代码级搬运（非运行时依赖）
+┌──────────────────────────────────┴───────────────────────────────────────┐
+│ 【移植】移植源                                                            │
+│   [INTERVIEW]  访谈方法论 · 本体数据（61 实体 / 380 属性）                 │
+│   [QINWEN]     产出规范与提示词（约 1,302 行）                            │
+└──────────────────────────────────────────────────────────────────────────┘</code></pre></div><h2 id="2.2-一次阶段执行的数据流-2">2.2 一次阶段执行的数据流<a class="anchor" href="#2.2-一次阶段执行的数据流-2" aria-label="锚点">#</a></h2><p><strong>每一步都标注了它落在哪个文件。</strong></p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>新建项目时（一次）
+    │
+    ▼
+ProjectService.create()                    【改动】[APP]services\project_service.py
+    │  · 建项目磁盘目录
+    │  · 建预置文件夹 uploads/ skills/ results/        ← 既有
+    │  · 装配六个内置技能                              ← 新增调用（幂等）
+    ▼
+六个技能落到  skills/poc-*/  并登记为项目技能（harness_myskills）
+    （技能包源在 [APP]data\poc_skills\，由 provisioner 幂等复制）
+
+────────────────────────────  分隔：以下为每个阶段执行一次  ────────────────────────────
+
+用户在工作台点「② 业务流程分析」
+    │
+    ▼
+GET /api/poc/stages?project_id=…          【新增】[APP]api\poc.py
+    │  ① 读项目产物 → 按路径归属阶段 → 推导六阶段状态
+    │  ② 校验上游（缺失则标记为可选）
+    │  ③ 在项目技能里按技能名找 skill_id
+    │  ④ 组装阶段启动消息（阶段目标 ＋ 上游产物路径清单）
+    ▼
+POST /api/conversations/{id}/agent         【原有】[APP]api\conversations.py
+    { content: 阶段启动消息, skill_id: "…" }        ★ 零改动
+    │
+    ▼
+RunManager.start()                         【原有】[APP]services\run_manager.py ★
+    │  单调序号 · 回放缓冲 · 每对话单活跃执行保护
+    ▼
+ClaudeAgentSDKService.run(...)             【原有】[APP]services\claude_agent_sdk_service.py ★
+    │
+    ├── _resolve_system_prompt(skill_id)   【原有】同一文件
+    │       system_prompt ＝ 平台规则 ＋ SKILL.md
+    │
+    ├── ClaudeSDKClient 多轮执行（沙箱内，项目工作目录）
+    │     ├─ Read        读上游产物 / 本体资产      ← 按需，不预拼
+    │     ├─ Write/Edit  写产物文件                 ← 产物就是文件
+    │     ├─ Bash        跑技能包里的确定性脚本      【移植】skills/poc-*/scripts/
+    │     └─ AskUserQuestion                        ← 仅①访谈
+    │
+    ├── FileWatcherService 全程监听项目目录  【原有】[APP]services\file_watcher.py ★
+    │       新文件/修改 → 自动建 File + Artifact 记录
+    │       排除：skills/ · .memory/ · temp/ · .claude/ · 点文件 · .log
+    │
+    └── 事件发布到 RunManager
+           token / thinking / tool_start / tool_end /
+           question_pending / file_tree_updated / artifact_generated / done
+    │
+    ▼
+GET /api/conversations/{id}/stream          【原有】[APP]api\conversations.py ★
+    │  先回放、后实时；支持 after_seq 断线续传
+    ▼
+前端                                       【原有】[UI]views\ap-agent\
+    ├── 对话流：显示思考、工具调用、文本增量
+    └── 预览区：读到产物文件 → 用户选画布 → 渲染</code></pre></div><p><strong>这张图里没有一个新的事件类型、没有一个新的流式端点、没有一处既有业务逻辑的修改。</strong></p><h2 id="2.3-六阶段-=-六个内置技能-2">2.3 六阶段 = 六个内置技能<a class="anchor" href="#2.3-六阶段-=-六个内置技能-2" aria-label="锚点">#</a></h2><p><strong>一个 POC 阶段 = 一个内置技能</strong>，共六个。<strong>项目创建时自动装配，不经技能集市。</strong></p><div class="tablewrap"><table><thead><tr><th>#</th><th>阶段</th><th>技能名</th><th>对齐既有词汇表</th><th>内部工作流（写在 <code>SKILL.md</code> 里）</th><th>产物</th><th>画布</th></tr></thead><tbody><tr><td>①</td><td>AI 访谈</td><td><code>poc-interview</code></td><td><code>productDesign</code></td><td>分析 → 抽取实体实例 → 下一个问题</td><td>实体实例 YAML</td><td><code>ontology</code></td></tr><tr><td>②</td><td>业务流程</td><td><code>poc-business-process</code></td><td><code>businessProcessMap</code></td><td>分析 → 总结</td><td>业务流程地图 YAML</td><td><code>bpmMap</code></td></tr><tr><td>③</td><td>业务需求</td><td><code>poc-user-story</code></td><td><code>userStoryMap</code></td><td>分析 → 总结</td><td>用户故事地图 YAML</td><td><code>storyMap</code></td></tr><tr><td>④</td><td>原型设计</td><td><code>poc-prototype</code></td><td><code>prototypeDesign</code></td><td>分析 → 总结</td><td>原型 HTML</td><td>—</td></tr><tr><td>⑤</td><td>数据库设计</td><td><code>poc-database</code></td><td><code>databaseDesign</code></td><td>分析 → 总结（UML → 数据模型）</td><td>数据模型 YAML</td><td><code>dbDesign</code></td></tr><tr><td>⑥</td><td>低代码 POC</td><td><code>poc-lowcode</code></td><td><span class="conf">❓</span> 无对应</td><td><span class="conf">❓</span> 待定</td><td><span class="conf">❓</span> 待定</td><td>— （一期不启用）</td></tr></tbody></table></div><p><strong>装配落点</strong>：项目工作空间的既有预置目录 <code>skills/</code> 下，六个子目录 <code>skills/poc-*/</code>，同时登记为项目技能（<code>harness_myskills</code>）。</p><blockquote><p><strong>「对齐既有词汇表」列不得改名</strong>——这五个标识是既有前端与 <code>dorbit_ai</code> 共用的词汇，作为技能标签保留。</p></blockquote><h3 id="⚠️-产物必须落在-results-下-核对代码后修正"><span class="conf">⚠️</span> 产物必须落在 <code>results/</code> 下（核对代码后修正）<a class="anchor" href="#⚠️-产物必须落在-results-下-核对代码后修正" aria-label="锚点">#</a></h3><p>平台的 system prompt（<code>[APP]prompts\claude_agent_sdk.md</code>）<strong>强制</strong>文件分级放置：</p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>最终交付物  →  results/
+中间文件    →  temp/          （且被排除，不登记为产物）
+never write them in the workspace root</code></pre></div><p>而 <code>_resolve_system_prompt</code> 注入技能时明确写着 <strong>"on conflict, platform rules take precedence"</strong>（冲突时平台规则优先）。</p><p><strong>所以产物目录不能自起一个 <code>poc/</code> 顶层目录</strong>——模型有充分理由把它写进 <code>results/</code>，一旦如此，<strong>按路径前缀推导阶段进度的机制会整体失效</strong>。</p><p><strong>修正后的产物路径</strong>：</p><div class="tablewrap"><table><thead><tr><th>阶段</th><th>产物路径</th><th>说明</th></tr></thead><tbody><tr><td>①</td><td><code>results/01-访谈/实体实例.yaml</code></td><td></td></tr><tr><td>②</td><td><code>results/02-业务流程/业务流程地图.yaml</code></td><td></td></tr><tr><td>③</td><td><code>results/03-业务需求/用户故事地图.yaml</code></td><td></td></tr><tr><td>④</td><td><code>results/04-原型/原型.html</code></td><td></td></tr><tr><td>⑤</td><td><code>results/05-数据库/数据模型.yaml</code></td><td></td></tr><tr><td>⑥</td><td><code>results/06-低代码/…</code></td><td>一期不启用</td></tr></tbody></table></div><p><strong>这样既遵守平台规则（交付物在 <code>results/</code> 下），又保留阶段前缀用于进度推导。</strong> <code>results/</code> 不在排除名单（<code>ARTIFACT_EXCLUDED_DIR_NAMES = {".claude", ".memory", "temp", "skills"}</code>），产物会被正常登记。</p><h2 id="2.4-为什么需要新增编排层与阶段定义-2">2.4 为什么需要新增编排层与阶段定义<a class="anchor" href="#2.4-为什么需要新增编排层与阶段定义-2" aria-label="锚点">#</a></h2><p>这是本次<strong>唯一的新增架构</strong>，所以说清理由。</p><h3 id="编排层解决的是-做哪一步-不是-怎么做">编排层解决的是「做哪一步」，不是「怎么做」<a class="anchor" href="#编排层解决的是-做哪一步-不是-怎么做" aria-label="锚点">#</a></h3><p>SDK ＋ 技能机制提供的是<strong>执行能力</strong>：</p><div class="tablewrap"><table><thead><tr><th>SDK ＋ 技能能回答</th><th>SDK ＋ 技能<strong>不能</strong>回答</th></tr></thead><tbody><tr><td>给定一段提示词和一个技能，怎么调工具</td><td>这个项目现在<strong>该做哪一步</strong></td></tr><tr><td>怎么读写文件、怎么写产物</td><td>这个阶段<strong>做完了吗</strong></td></tr><tr><td>怎么向用户追问</td><td>这个阶段对应<strong>哪个技能</strong></td></tr><tr><td>怎么流式输出</td><td>上游有什么、<strong>在哪个文件</strong></td></tr><tr><td>怎么在沙箱里跑脚本</td><td>上游变了，<strong>哪些下游要重做</strong></td></tr></tbody></table></div><p>右边五问就是编排层的全部职责。</p><h3 id="如果不做编排层-这五个答案只能落在两个地方">如果不做编排层，这五个答案只能落在两个地方<a class="anchor" href="#如果不做编排层-这五个答案只能落在两个地方" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>落点</th><th>后果</th></tr></thead><tbody><tr><td><strong>前端硬编码</strong></td><td>前端要自己知道六阶段的名字、顺序、产物目录、上游关系、画布映射——与「<strong>前端零改动</strong>」直接冲突，且每加一个阶段都要改前端</td></tr><tr><td><strong><code>/agent</code> 接口硬编码</strong></td><td>把平台的通用对话接口绑死到 POC 场景，影响工作台其他所有对话</td></tr></tbody></table></div><h3 id="所以编排层的价值是">所以编排层的价值是<a class="anchor" href="#所以编排层的价值是" aria-label="锚点">#</a></h3><p><strong>把「六阶段是什么」从执行引擎和前端里拿出来，用一份数据集中描述。</strong> 它不驱动执行循环，只回答上面那五问。</p><p>规模很小：<strong>约 400 行、4 个函数</strong>。</p><h3 id="为什么阶段定义要单独一个模块">为什么阶段定义要单独一个模块<a class="anchor" href="#为什么阶段定义要单独一个模块" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>#</th><th>理由</th></tr></thead><tbody><tr><td>1</td><td>它是<strong>纯数据</strong>——六条记录（编号 / 名称 / 技能名 / 上游 / 产物目录 / 画布），不 import 数据库、不 import SDK，任何层都能安全引用</td></tr><tr><td>2</td><td>它被<strong>三处</strong>引用：编排层（推导进度）、接口层（返回清单）、技能包校验脚本（核对产物路径）</td></tr><tr><td>3</td><td>若塞进 service，接口层为了拿一份<strong>静态清单</strong>就要依赖 service 的完整实现（含 DB 会话），还容易与编排层形成循环引用</td></tr></tbody></table></div><blockquote><p>上一版把它设计成 <code>constants/</code> <strong>目录</strong>，一个目录只放一个文件过重。<strong>改为单文件 <code>[APP]constants.py</code>。</strong></p></blockquote><h2 id="2.5-架构落地到哪些文件-2">2.5 架构落地到哪些文件<a class="anchor" href="#2.5-架构落地到哪些文件-2" aria-label="锚点">#</a></h2><p><strong>这是本章的重点：架构的每一层落在哪个文件、是新增、原有还是移植。</strong></p><h3 id="后端-[app]">后端（<code>[APP]</code>）<a class="anchor" href="#后端-[app]" aria-label="锚点">#</a></h3><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>C:\AP-dorbit-ai\AP_Hub\ap_agent\backend\app\
+│
+├── main.py                          【改动】挂载新增路由
+├── deps.py                          【改动】注册编排层与技能装配器的工厂
+├── constants.py                     【新增】★ 六阶段定义：
+│                                              编号·名称·技能名·上游·产物目录·画布
+│
+├── core/
+│   ├── config.py                    【改动】加 POC 开关与内置技能包根目录配置
+│   ├── llm.py                       【原有】直连对话通道（本次不动）
+│   ├── database.py                  【原有】会话工厂与幂等补列工具
+│   ├── events.py                    【原有】SSE 事件与事件总线
+│   ├── exceptions.py                【原有】新增异常继承它
+│   └── auth.py / aad.py / security.py / logging.py      【原有】
+│
+├── services/
+│   ├── poc_orchestrator.py          【新增】★ 编排层：
+│   │                                          进度推导·Skill绑定·上下文组装
+│   ├── poc_skill_provisioner.py     【新增】★ 内置技能装配：
+│   │                                          把六个技能包幂等装进项目 skills/
+│   ├── project_service.py           【改动】创建项目时调用技能装配（一行）
+│   │
+│   ├── claude_agent_sdk_service.py  【原有】★ 执行引擎（2,684 行）——本次核心复用点
+│   ├── run_manager.py               【原有】★ 执行总线（263 行）
+│   ├── file_watcher.py              【原有】★ 写文件自动登记为产物（601 行）
+│   ├── artifact_service.py          【原有】★ 产物按路径去重保留最新（74 行）
+│   ├── myskill_service.py           【改动】★ 项目技能。加一个公开方法：按相对路径
+│   │                                          批量写技能附属文件（建子目录 ＋ 写盘 ＋ 建记录）
+│   │                                          ——既有私有实现只建 DB 记录、不写盘，见 3.1
+│   ├── folder_service.py            【原有】预置文件夹（uploads / skills / results）
+│   ├── skill_registry_service.py    【原有】技能集市——本次完全不涉及
+│   ├── conversation_service.py      【原有】对话与消息（513 行）
+│   ├── workspace_service.py         【原有】113 行
+│   ├── file_service.py / file_storage.py                                【原有】838 ＋ 183 行
+│   ├── file_preview_service.py / disk_sync_service.py                   【原有】157 ＋ 361 行
+│   ├── tool_call_service.py / reference_service.py                      【原有】439 行
+│   ├── docker_shell_backend.py / sandbox_executor.py                    【原有】784 行
+│   └── auth_service.py                                                  【原有】270 行
+│
+├── api/
+│   ├── poc.py                       【新增】阶段清单 / 阶段进度 / 阶段启动
+│   ├── conversations.py             【原有】★ 含 /agent 与 /stream——零改动
+│   └── （其余 11 个路由模块）        【原有】
+│
+├── schemas/
+│   └── poc.py                       【新增】阶段出入参
+│
+├── models/
+│   └── （既有 17 个文件 / 15 张表）  【原有】★ 本次不新增、不修改任何模型
+│
+├── prompts/
+│   └── （既有 3 个资产）             【原有】技能的挂载范式
+│
+└── data/                                                 ← 新增目录
+    └── poc_skills/                  【移植】★ 六个内置技能包源，逐文件见 2.6</code></pre></div><h3 id="前端-[ui]">前端（<code>[UI]</code>）<a class="anchor" href="#前端-[ui]" aria-label="锚点">#</a></h3><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>C:\AP-dorbit-ai\AP_Hub\ap_agent_ui\src\
+│
+├── views/plugins/utils/yamlUtils.ts   【待核实】既有 159 行 vs 来源 214 行，
+│                                                 需逐函数比对；等价则不动，缺函数则只补缺的
+└── （其余全部）                        【原有】工作台 ＋ 四个画布 ＋ 技能列表 ＋ DML 编辑器</code></pre></div><h3 id="不移植的-明确划出去">不移植的（明确划出去）<a class="anchor" href="#不移植的-明确划出去" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>内容</th><th>路径</th><th>行数</th><th>为什么不取</th></tr></thead><tbody><tr><td>14 个生成模块的 Python 代码</td><td><code>[QINWEN]server\chat\dorbit_ai\</code></td><td><strong>1,455</strong></td><td>本身就是调大模型的薄包装；套娃且会断掉流式输出（详 3.5）</td></tr><tr><td>本体相关数据模型</td><td><code>[INTERVIEW]models\models.py</code></td><td>436</td><td>本体改作技能包文件资产，不入库</td></tr><tr><td>本体数据访问层</td><td><code>[INTERVIEW]repositories\ontology_db.py</code></td><td>275</td><td>不再入库</td></tr><tr><td>数据库管理层</td><td><code>[INTERVIEW]repositories\database_manager.py</code></td><td>570</td><td>用既有数据库层</td></tr><tr><td>轮次仓储</td><td><code>[INTERVIEW]repositories\turn_repository.py</code></td><td>360</td><td>既有平台已有对话体系</td></tr><tr><td>导出与缓存工具</td><td><code>[INTERVIEW]utils\ttl_exporter.py</code> 等</td><td>657</td><td>不需要</td></tr><tr><td>应用与配置</td><td><code>[INTERVIEW]app.py</code> / <code>config\settings.py</code> / <code>core\llm*.py</code></td><td>598</td><td>用既有对应模块</td></tr><tr><td>前端全部页面</td><td><code>C:\dorbit_ai\web_ai\src\views\ai\</code></td><td>12,530（33 个文件）</td><td>既有项目已有四个画布</td></tr><tr><td>勤问服务其余全部</td><td><code>[QINWEN]</code> 其余</td><td>—</td><td>知识库、发票、PPT、语音、SQL 生成等</td></tr></tbody></table></div><h2 id="2.6-六个技能包逐文件说明-2">2.6 六个技能包逐文件说明<a class="anchor" href="#2.6-六个技能包逐文件说明-2" aria-label="锚点">#</a></h2><p><strong>技能包源在 <code>[APP]data\poc_skills\</code>，装配后落到项目的 <code>skills/poc-*/</code>。每个文件的职责如下。</strong></p><h3 id="①-poc-interview-—-ai-访谈">① <code>poc-interview</code> — AI 访谈<a class="anchor" href="#①-poc-interview-—-ai-访谈" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>定义访谈阶段的角色与工作流：加载本体 → 分析已有对话已确认的信息 → 抽取实体实例 → 逐个判定实例缺哪些属性 → 按提问顺序选出下一个要问的实体 → 生成那一个问题；约定产物路径与结构</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]services\question_service.py</code>（643）＋ <code>action_service.py</code>（428）＋ <code>analysis_service.py</code>（324）</td></tr><tr><td><code>references/ontology-general.yaml</code></td><td>通用需求访谈本体：15 个实体 / 87 个属性，含每个实体的<strong>提问顺序</strong>与每个属性<strong>是否必填</strong></td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\general_ontology.ttl</code></td></tr><tr><td><code>references/ontology-agent_database_design.yaml</code></td><td>数据库设计专用本体：16 个实体 / 103 个属性</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\agent_database_design_ontology.ttl</code></td></tr><tr><td><code>references/ontology-finance_shared.yaml</code></td><td>财务共享行业本体：11 个实体 / 67 个属性</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\finance_shared_ontology.ttl</code></td></tr><tr><td><code>references/ontology-procurement.yaml</code></td><td>采购行业本体：9 个实体 / 58 个属性</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\procurement_ontology.ttl</code></td></tr><tr><td><code>references/ontology-ma_implementation.yaml</code></td><td>并购实施行业本体：10 个实体 / 65 个属性</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\ma_implementation_ontology.ttl</code></td></tr><tr><td><code>references/instance-spec.md</code></td><td>实体实例产物的字段规范：实体键 / 实例后缀 / 属性值 / 是否完整 / 缺失属性五项；<strong>这是本体画布的渲染契约</strong></td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]services\deliverable_service.py</code>（538）</td></tr><tr><td><code>scripts/validate_instance.py</code></td><td>校验实例产物：是合法 YAML、顶层为实例列表、每项含上述五个字段</td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h3 id="②-poc-business-process-—-业务流程">② <code>poc-business-process</code> — 业务流程<a class="anchor" href="#②-poc-business-process-—-业务流程" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>定义业务流程阶段工作流：读上游实体实例（若有）→ 分析业务对象、环节与角色 → 总结 → 产出业务流程地图；约定产物路径与结构</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]core\prompts.py</code>（分析 · 总结 · 需求描述三组，自 1,648 行中选取）</td></tr><tr><td><code>references/bpm-map-spec.md</code></td><td>业务流程地图产出规范：顶层键（标题 / 配置 / 描述 / 端到端流程）、三级流程层级（端到端 → 二级 → 三级）、每级必填字段与写法要求</td><td><code class="tag">【移植】</code></td><td><code>[QINWEN]configs\prompt_config.py</code>（业务流程地图设计 <strong>146 行</strong>）</td></tr><tr><td><code>references/bpmn-spec.md</code></td><td>BPMN 两步产出规范：先出结构 JSON，再由 JSON 转 BPMN XML；含元素、网关与连线的约定</td><td><code class="tag">【移植】</code></td><td>同上（BPMN 设计 <strong>103 行</strong> ＋ 第二步 <strong>101 行</strong>）</td></tr><tr><td><code>references/refine-spec.md</code></td><td>流程细化规范：在已有流程地图上补充节点属性、流转条件与异常分支</td><td><code class="tag">【移植】</code></td><td>同上（流程细化 <strong>90 行</strong>）</td></tr><tr><td><code>scripts/validate_yaml.py</code></td><td>校验产物：合法 YAML、顶层键齐全、端到端流程非空</td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h3 id="③-poc-user-story-—-业务需求">③ <code>poc-user-story</code> — 业务需求<a class="anchor" href="#③-poc-user-story-—-业务需求" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>定义业务需求阶段：读上游产物 → 分析角色、场景与业务活动 → 总结 → 产出用户故事地图；约定产物路径与结构</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]core\prompts.py</code></td></tr><tr><td><code>references/story-map-spec.md</code></td><td>用户故事地图规范：顶层键（标题 / 配置.产品信息 / 阶段）、三层结构（阶段 → 活动 → 用户故事）与支撑需求</td><td><code class="tag">【移植】</code></td><td><code>[QINWEN]configs\prompt_config.py</code>（用户故事地图设计 <strong>93 行</strong>）</td></tr><tr><td><code>references/story-detail-spec.md</code></td><td>单个用户故事的详情规范：描述模板、验收标准写法、优先级与估算字段</td><td><code class="tag">【移植】</code></td><td>同上（用户故事详情设计 <strong>97 行</strong>）</td></tr><tr><td><code>references/test-case-spec.md</code></td><td>用户故事测试用例规范：用例结构、前置条件、操作步骤、预期结果</td><td><code class="tag">【移植】</code></td><td>同上（测试用例设计）</td></tr><tr><td><code>scripts/validate_yaml.py</code></td><td>校验产物：合法 YAML、顶层键齐全、阶段与活动非空</td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h3 id="④-poc-prototype-—-原型设计">④ <code>poc-prototype</code> — 原型设计<a class="anchor" href="#④-poc-prototype-—-原型设计" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>定义原型设计阶段：读上游用户故事 → 分析页面清单与交互 → 产出原型 HTML；约定产物路径与<strong>自包含</strong>要求</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]core\prompts.py</code></td></tr><tr><td><code>references/prototype-spec.md</code></td><td>原型产出规范：页面清单、布局与组件约定、<strong>样式与脚本必须内联</strong>（不得外链）、可交互元素的最低要求</td><td><code class="tag">【移植】</code></td><td><code>[QINWEN]configs\prompt_config.py</code>（原型设计 <strong>84 行</strong>）</td></tr><tr><td><code>scripts/validate_html.py</code></td><td>校验产物：是合法 HTML、含约定根节点、<strong>无外链资源</strong></td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h3 id="⑤-poc-database-—-数据库设计">⑤ <code>poc-database</code> — 数据库设计<a class="anchor" href="#⑤-poc-database-—-数据库设计" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>定义数据库设计阶段的<strong>两步工作流</strong>：先由业务对象出数据模型 UML，再由 UML 出数据模型 DSL；约定产物路径与结构</td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]core\prompts.py</code></td></tr><tr><td><code>references/data-model-uml-spec.md</code></td><td>数据模型 UML 产出规范：实体、属性、关系的表达方式与命名约定</td><td><code class="tag">【移植】</code></td><td><code>[QINWEN]configs\prompt_config.py</code>（数据模型 UML 设计 <strong>75 行</strong>）</td></tr><tr><td><code>references/data-model-spec.md</code></td><td>数据模型 DSL 产出规范：顶层键（根名称 / 版本 / 表数量 / 条目）、三层结构（条目 → 表集合 → 元字段集合）、字段类型与主键类型的<strong>数字取值约定</strong></td><td><code class="tag">【移植】</code></td><td>同上（数据模型 JSON 设计 <strong>251 行</strong>，篇幅最大）</td></tr><tr><td><code>scripts/validate_dsl.py</code></td><td>校验 DSL 顶层结构（<strong>宽松</strong>）：合法 YAML、顶层键齐全、条目非空；<strong>不校验数字枚举取值</strong>（部分含义未确认，不得猜测）</td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h3 id="⑥-poc-lowcode-—-低代码-poc">⑥ <code>poc-lowcode</code> — 低代码 POC<a class="anchor" href="#⑥-poc-lowcode-—-低代码-poc" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>文件</th><th>具体功能</th><th>标记</th><th>来源</th></tr></thead><tbody><tr><td><code>SKILL.md</code></td><td>占位技能：声明该阶段的输入、输出与产物槽位；<strong>方法论待定，一期不启用</strong></td><td><code class="tag">【新增】</code></td><td>—</td></tr></tbody></table></div><h2 id="2.7-规模小结-2">2.7 规模小结<a class="anchor" href="#2.7-规模小结-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>类别</th><th>内容</th><th>数量</th></tr></thead><tbody><tr><td><code class="tag">【新增】</code></td><td><code>constants.py</code> · <code>services/poc_orchestrator.py</code> · <code>services/poc_skill_provisioner.py</code> · <code>api/poc.py</code> · <code>schemas/poc.py</code> ＋ 4 个技能包校验脚本</td><td><strong>5 个后端模块 ＋ 4 个脚本</strong>，约 <strong>1,000 行</strong></td></tr><tr><td><code class="tag">【移植】</code></td><td>6 个技能包：6 份 <code>SKILL.md</code> ＋ 22 个产出规范 ＋ 5 份本体</td><td>规范约 <strong>1,302 行</strong>，本体 <strong>61 实体 / 380 属性</strong></td></tr><tr><td><code class="tag">【改动】</code></td><td><code>main.py</code> · <code>deps.py</code> · <code>core/config.py</code> · <code>services/project_service.py</code> · <code>services/myskill_service.py</code></td><td><strong>5 处，均为增量</strong></td></tr><tr><td><code class="tag">【原有】</code></td><td>其余全部</td><td>88 个文件 / 约 <strong>21,800 行</strong>，一行不改</td></tr></tbody></table></div><blockquote><p><strong>本次不改动的</strong>：<code>api/conversations.py</code>（阶段执行走既有的 <code>/agent</code>，它本来就接受 <code>skill_id</code>）、<code>models/</code>（不新增表、不新增列）、<code>services/skill_registry_service.py</code>（六阶段技能不经集市）、整个前端。</p></blockquote><hr class="rule"><h1 id="第三章-具体功能点实现-2">第三章 · 具体功能点实现<a class="anchor" href="#第三章-具体功能点实现-2" aria-label="锚点">#</a></h1><blockquote><p>每个功能点都给出<strong>落点文件路径</strong>与<strong>新增 / 原有 / 移植标记</strong>；移植项同时给出<strong>来源路径</strong>。</p></blockquote><h2 id="3.1-阶段与内置技能的编排-2">3.1 阶段与内置技能的编排<a class="anchor" href="#3.1-阶段与内置技能的编排-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>#</th><th>功能点</th><th>文件路径</th><th>标记</th><th>来源（移植时）</th></tr></thead><tbody><tr><td>1.1</td><td>六阶段定义（编号·名称·技能名·上游·产物目录·画布）</td><td><code>[APP]constants.py</code></td><td><code class="tag">【新增】</code></td><td>阶段语义参考 <code>[INTERVIEW]services\agent_profiles.py</code>（286 行）</td></tr><tr><td>1.2</td><td>内置技能装配（幂等，装进项目 <code>skills/</code>）</td><td><code>[APP]services\poc_skill_provisioner.py</code></td><td><code class="tag">【新增】</code></td><td>物化复用 <code>[APP]services\myskill_service.py</code> 的 <code>create</code> / <code>materialize_skill_folder</code></td></tr><tr><td>1.3</td><td>项目创建时调用装配</td><td><code>[APP]services\project_service.py</code> 的 <code>create()</code></td><td><code class="tag">【改动】</code></td><td>挂在既有 <code>create_preset_folders</code> 之后</td></tr><tr><td>1.4</td><td>预置目录（<code>uploads/ skills/ results/</code>）</td><td><code>[APP]services\folder_service.py</code></td><td><code class="tag">【原有】</code></td><td>— 装配的落点</td></tr><tr><td>1.5</td><td>技能附属文件落盘（建子目录 ＋ 写盘 ＋ 建记录）</td><td><code>[APP]services\myskill_service.py</code> 新增公开方法</td><td><code class="tag">【改动】</code></td><td>内部复用既有私有 <code>_ensure_skill_subfolder</code> / <code>_write_text_file</code>；<strong>既有公开 API 只建 DB 记录不写盘</strong></td></tr><tr><td>1.6</td><td>阶段进度推导（未开始 / 进行中 / 已完成 / 上游已变更）</td><td><code>[APP]services\poc_orchestrator.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>1.7</td><td>Skill 绑定（按技能名查项目技能，未装配返回 <code>None</code>）</td><td><code>[APP]services\poc_orchestrator.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>1.8</td><td>上下文组装（上游只给路径，永不抛异常）</td><td><code>[APP]services\poc_orchestrator.py</code></td><td><code class="tag">【新增】</code></td><td>编排状态语义参考 <code>[INTERVIEW]services\conversation_coordinator.py</code>（862 行）</td></tr><tr><td>1.9</td><td>阶段清单接口 <code>GET /api/poc/stages</code></td><td><code>[APP]api\poc.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>1.10</td><td>阶段详情与启动接口 <code>GET</code> / <code>POST /api/poc/stages/{no}</code></td><td><code>[APP]api\poc.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>1.11</td><td>阶段出入参模型</td><td><code>[APP]schemas\poc.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>1.12</td><td>项目技能按名查询</td><td><code>[APP]services\myskill_service.py</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr></tbody></table></div><h3 id="关键实现点">关键实现点<a class="anchor" href="#关键实现点" aria-label="锚点">#</a></h3><p><strong>技能是项目默认组成部分，不经过集市</strong>：</p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>项目创建（ProjectService.create）
+    ├── 建项目磁盘目录
+    ├── 建预置文件夹 uploads/ skills/ results/     ← 既有
+    └── 装配六个内置技能                            ← 新增调用
+          ├── 从 [APP]data\poc_skills\ 取技能包
+          ├── 写进项目 skills/poc-*/ 目录（SKILL.md ＋ references/ ＋ scripts/）
+          └── 登记为项目技能（harness_myskills）
+    ▲ 幂等键：(project_id, 技能名)。已存在则整包跳过，不重复建
+    ▲ 顺序硬依赖：必须在 create_preset_folders 之后
+      —— 物化时按 icon_type == "my_skill" 找 skills 预置夹，
+         找不到只打 warning 就静默返回：技能表有记录、磁盘没目录
+      → 装配器必须自己断言目录已生成，不能依赖被调用方的静默行为</code></pre></div><p><strong>装配为什么需要改 <code>myskill_service.py</code></strong>：</p><div class="tablewrap"><table><thead><tr><th>既有能力</th><th>能不能用</th></tr></thead><tbody><tr><td><code>create()</code> → 建 <code>MySkill</code> 行 ＋ 物化 <code>skills/&lt;名&gt;/</code> ＋ <strong>把 <code>SKILL.md</code> 写盘</strong></td><td><span class="conf">✅</span> 直接用</td></tr><tr><td><code>materialize_skill_folder()</code></td><td><span class="conf">✅</span> 直接用</td></tr><tr><td><code>_ensure_skill_subfolder()</code> → 建 <code>references/</code> 子目录</td><td>❌ <strong>私有方法</strong></td></tr><tr><td><code>add_skill_file()</code> → <code>_create_file_record()</code></td><td>❌ <strong>只 <code>db.add(File)</code>，不写磁盘</strong></td></tr></tbody></table></div><p>所以带 <code>references/ontology-*.yaml</code> 的技能包，<strong>用现有公开 API 装不进磁盘</strong>，模型 <code>Read</code> 不到本体 → ① 访谈技能直接失效。必须补一个公开方法把「建子目录 ＋ 写盘 ＋ 建记录」三件事做完（内部复用既有私有实现）。<strong>这是第 5 处既有文件改动。</strong></p><p><strong>进度不建表、不改对话表</strong> —— 完全从产物推导：</p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>一个阶段「已完成」 ⟺ 项目下存在 relative_path 以该阶段 artifact_dir 开头的产物
+
+not_started  该阶段目录下没有任何产物
+running      该阶段绑定的对话存在活跃执行
+done         存在该阶段产物
+stale        存在该阶段产物，但有上游产物的 created_at 比它更新  ← 只标记，不自动重算</code></pre></div><p><strong>启动接口不执行阶段</strong>，只做三件事，然后前端用<strong>既有的</strong> <code>/agent</code> 发出去：</p><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>① 校验该阶段有对应技能（缺则先幂等装配，再校验）
+② 组装阶段启动消息（上游产物路径清单 ＋ 产出要求）
+③ 返回 { conversation_id, skill_id, content }</code></pre></div><p><strong>验收</strong>：新建项目后，<code>skills/</code> 下出现六个技能目录且项目技能列表有六条；重复执行装配不产生重复；一个新项目调用阶段清单，六个阶段全部「未开始」且<strong>不报错</strong>；直接做⑤跳过①②③④能正常出结果。</p><h2 id="3.2-阶段执行与流式输出-2">3.2 阶段执行与流式输出<a class="anchor" href="#3.2-阶段执行与流式输出-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>#</th><th>功能点</th><th>文件路径</th><th>标记</th><th>来源（移植时）</th></tr></thead><tbody><tr><td>2.1</td><td>阶段执行（走既有 <code>/agent</code>）</td><td><code>[APP]api\conversations.py</code></td><td><code class="tag">【原有】</code></td><td>— <span class="conf">★</span> 零改动</td></tr><tr><td>2.2</td><td>技能内容注入 system prompt</td><td><code>[APP]services\claude_agent_sdk_service.py</code> 的 <code>_resolve_system_prompt</code></td><td><code class="tag">【原有】</code></td><td>内容来自 <code>[INTERVIEW]core\prompts.py</code>（1,648 行，取 5 组）</td></tr><tr><td>2.3</td><td>工具链与沙箱执行</td><td><code>[APP]services\docker_shell_backend.py</code> / <code>sandbox_executor.py</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>2.4</td><td>流式事件（token / thinking / tool_start / tool_end / done）</td><td><code>[APP]services\run_manager.py</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>2.5</td><td>断线续传（<code>after_seq</code> 回放）</td><td><code>[UI]views\ap-agent\composables\sseClient.js</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>2.6</td><td>事件渲染分发</td><td><code>[UI]views\ap-agent\stores\useChatStore.js</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>2.7</td><td>中断与续跑</td><td><code>[APP]api\conversations.py</code> 的 stop 端点</td><td><code class="tag">【原有】</code></td><td>—</td></tr></tbody></table></div><h3 id="关键实现点-2">关键实现点<a class="anchor" href="#关键实现点-2" aria-label="锚点">#</a></h3><p><strong>零新增事件类型。</strong> 前端 <code>useChatStore.js</code> 认识 10 种事件，SDK 引擎发出的事件<strong>全部落在其中</strong>，不需要任何映射层：</p><div class="tablewrap"><table><thead><tr><th>事件</th><th>用途</th><th>前端识别</th></tr></thead><tbody><tr><td><code>thinking</code> / <code>token</code></td><td>思考与文本增量</td><td><span class="conf">✅</span></td></tr><tr><td><code>tool_start</code> / <code>tool_end</code></td><td>工具调用</td><td><span class="conf">✅</span></td></tr><tr><td><code>question_pending</code></td><td><strong>① 访谈提问</strong></td><td><span class="conf">✅</span></td></tr><tr><td><code>file_tree_updated</code></td><td>文件树变更</td><td><span class="conf">✅</span></td></tr><tr><td><code>artifact_generated</code></td><td><strong>产物已生成</strong></td><td><span class="conf">✅</span></td></tr><tr><td><code>todo_updated</code> / <code>done</code> / <code>agent_error</code></td><td>TODO / 完成 / 失败</td><td><span class="conf">✅</span></td></tr></tbody></table></div><blockquote><p>上一版设计为了把后端阶段语义「翻译」成这些事件而做了映射层，并因此不得不放弃动态步骤清单。本版<strong>不再有需要翻译的东西</strong>——阶段就是一次 Agent 执行。</p></blockquote><p><strong>验收</strong>：生成过程中刷新页面，重连后<strong>不丢事件</strong>；未做①访谈时直接做②能正常出结果；前端仓库无改动。</p><h2 id="3.3-访谈与本体-2">3.3 访谈与本体<a class="anchor" href="#3.3-访谈与本体-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>#</th><th>功能点</th><th>文件路径</th><th>标记</th><th>来源（移植时）</th></tr></thead><tbody><tr><td>3.1</td><td>访谈方法论（分析 → 抽取 → 提问）</td><td><code>[APP]data\poc_skills\poc-interview\SKILL.md</code></td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]services\question_service.py</code>（643）＋ <code>action_service.py</code>（428）＋ <code>analysis_service.py</code>（324）</td></tr><tr><td>3.2</td><td>五套本体（<strong>含提问顺序</strong>）</td><td><code>[APP]data\poc_skills\poc-interview\references\ontology-*.yaml</code></td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]data\owl\*.ttl</code>（5 份，2,779 行，<strong>61 实体 / 380 属性</strong>）</td></tr><tr><td>3.3</td><td>实体实例产出结构</td><td><code>[APP]data\poc_skills\poc-interview\references\instance-spec.md</code></td><td><code class="tag">【移植】</code></td><td><code>[INTERVIEW]services\deliverable_service.py</code>（538 行）</td></tr><tr><td>3.4</td><td>追问（向用户提问）</td><td><code>[APP]services\claude_agent_sdk_service.py</code> 的 <code>AskUserQuestion</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>3.5</td><td>答案回灌</td><td><code>[APP]api\conversations.py</code> 的 <code>/answer-question</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>3.6</td><td>实体实例落盘</td><td>产物 <code>results/01-访谈/实体实例.yaml</code></td><td><code class="tag">【新增】</code></td><td>由技能指导模型写入</td></tr><tr><td>3.7</td><td>实例结构校验</td><td><code>[APP]data\poc_skills\poc-interview\scripts\validate_instance.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>3.8</td><td>本体画布渲染</td><td><code>[UI]views\plugins\ontology\</code>（7 个文件，13,123 行）</td><td><code class="tag">【原有】</code></td><td>—</td></tr></tbody></table></div><h3 id="关键实现点-3">关键实现点<a class="anchor" href="#关键实现点-3" aria-label="锚点">#</a></h3><p><strong>访谈的追问不自建。</strong> SDK 已有 <code>AskUserQuestion</code>，前端已实现提问卡片，所以删掉了一整套原本要写的机制：</p><div class="tablewrap"><table><thead><tr><th>旧设计要做的事</th><th>现在</th></tr></thead><tbody><tr><td>自定义 <code>question_chunk</code> / <code>question_complete</code> 事件</td><td><strong>不需要</strong>，用既有的 <code>question_pending</code></td></tr><tr><td>对话表加 <code>step3_question_text</code> 字段</td><td><strong>不需要</strong></td></tr><tr><td>后端维护「待回答问题」内存态</td><td><strong>不需要</strong></td></tr></tbody></table></div><p><strong>本体与实体实例都不入库</strong>：</p><div class="tablewrap"><table><thead><tr><th>数据</th><th>存哪</th><th>为什么</th></tr></thead><tbody><tr><td>本体定义（61 实体 / 380 属性）</td><td>技能包 <code>references/ontology-*.yaml</code></td><td>静态定义；模型按需 <code>Read</code>，不进提示词</td></tr><tr><td>实体实例</td><td>产物 <code>results/01-访谈/实体实例.yaml</code></td><td><strong>本体画布本来就是读 YAML 文件渲染</strong>，不是读接口</td></tr></tbody></table></div><blockquote><p><span class="conf">⚠️</span> 转换本体时必须保留实体上的<strong>提问顺序</strong>字段。它是访谈能力的核心资产，丢了就退化成通用聊天。</p></blockquote><p><strong>验收</strong>：<code>general</code> 本体含 15 个实体 / 87 个属性且带提问顺序；一轮访谈后产物能被本体画布正常渲染；连续多轮访谈实例<strong>累积</strong>而非重建。</p><h2 id="3.4-产物-2">3.4 产物<a class="anchor" href="#3.4-产物-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>#</th><th>功能点</th><th>文件路径</th><th>标记</th><th>来源（移植时）</th></tr></thead><tbody><tr><td>4.1</td><td>产物自动登记（写文件 → 建 File ＋ Artifact）</td><td><code>[APP]services\file_watcher.py</code></td><td><code class="tag">【原有】</code></td><td>— <span class="conf">★</span> 零改动</td></tr><tr><td>4.2</td><td><strong>按路径去重、保留最新、记改写次数</strong></td><td><code>[APP]services\artifact_service.py</code></td><td><code class="tag">【原有】</code></td><td>— <span class="conf">★</span> 正是「按时间归一」</td></tr><tr><td>4.3</td><td>产物列表接口</td><td><code>[APP]api\artifacts.py</code> / <code>conversations.py</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>4.4</td><td>产物预览与下载</td><td><code>[APP]api\files.py</code>（<code>{guid}/preview</code> / <code>{guid}/download</code>）</td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>4.5</td><td>按阶段归属产物（路径前缀匹配）</td><td><code>[APP]services\poc_orchestrator.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>4.6</td><td>上游失效标记（时间比较）</td><td><code>[APP]services\poc_orchestrator.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>4.7</td><td>四个画布渲染</td><td><code>[UI]views\plugins\bpmMap\</code> · <code>storyMap\</code> · <code>dbDesign\</code> · <code>ontology\</code></td><td><code class="tag">【原有】</code></td><td>—</td></tr></tbody></table></div><h3 id="关键实现点-4">关键实现点<a class="anchor" href="#关键实现点-4" aria-label="锚点">#</a></h3><p><strong>不新增版本表，因为既有代码已经在做</strong>。<code>artifact_service.py</code> 的既有实现：</p><div class="codewrap"><div class="codetag">python</div><pre class="code"><code># [APP]services/artifact_service.py（既有，本次不改）
+# created_at 升序遍历，后写覆盖先写 → 每个路径只剩最新一条
+latest_by_path: dict[str, Artifact] = {}
+for artifact in artifacts:
+    latest_by_path[artifact.relative_path] = artifact
+...
+artifact.run_count = len(run_ids_by_path[artifact.relative_path])</code></pre></div><p><strong>「按 <code>created_at</code> 升序、后写覆盖先写、每路径只剩最新、<code>run_count</code> 记改写次数」——这就是「按产物时间统一归到产物里面」。</strong></p><h3 id="数据结论">数据结论<a class="anchor" href="#数据结论" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>项</th><th>数量</th></tr></thead><tbody><tr><td>新增表</td><td><strong>0 张</strong></td></tr><tr><td>新增列</td><td><strong>0 处</strong></td></tr><tr><td>改动既有表</td><td><strong>无</strong></td></tr></tbody></table></div><div class="tablewrap"><table><thead><tr><th>旧设计规划过的表</th><th>现在</th></tr></thead><tbody><tr><td>产物版本表 / 版本历史表</td><td><strong>不需要</strong>：按时间归到既有 <code>harness_artifacts</code></td></tr><tr><td>本体框架 / 类别 / 实体 / 属性表（4 张）</td><td><strong>不需要</strong>：本体是技能包文件资产</td></tr><tr><td>实体实例表</td><td><strong>不需要</strong>：实例是产物 YAML</td></tr></tbody></table></div><p><strong>验收</strong>：同一阶段连续跑两次，产物列表该路径<strong>只有一条</strong>且 <code>run_count</code> 为 2；跨对话能看到彼此的产物；上游更新后下游标记「上游已变更」但<strong>内容未被改动</strong>。</p><h2 id="3.5-产物生成-2">3.5 产物生成<a class="anchor" href="#3.5-产物生成-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>#</th><th>功能点</th><th>文件路径</th><th>标记</th><th>来源（移植时）</th></tr></thead><tbody><tr><td>5.1</td><td>业务流程地图产出规范</td><td><code>[APP]data\poc_skills\poc-business-process\references\bpm-map-spec.md</code></td><td><code class="tag">【移植】</code></td><td><code>[QINWEN]configs\prompt_config.py</code>（<strong>146 行</strong>）</td></tr><tr><td>5.2</td><td>BPMN 产出规范（两步）</td><td>同上 <code>references\bpmn-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（<strong>103 ＋ 101 行</strong>）</td></tr><tr><td>5.3</td><td>流程细化规范</td><td>同上 <code>references\refine-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（90 行）</td></tr><tr><td>5.4</td><td>用户故事地图规范</td><td><code>[APP]data\poc_skills\poc-user-story\references\story-map-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（93 行）</td></tr><tr><td>5.5</td><td>用户故事详情规范</td><td>同上 <code>references\story-detail-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（97 行）</td></tr><tr><td>5.6</td><td>测试用例规范</td><td>同上 <code>references\test-case-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上</td></tr><tr><td>5.7</td><td>原型设计规范</td><td><code>[APP]data\poc_skills\poc-prototype\references\prototype-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（84 行）</td></tr><tr><td>5.8</td><td>数据模型 DSL 规范</td><td><code>[APP]data\poc_skills\poc-database\references\data-model-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（<strong>251 行</strong>，最大）</td></tr><tr><td>5.9</td><td>数据模型 UML 规范</td><td>同上 <code>references\data-model-uml-spec.md</code></td><td><code class="tag">【移植】</code></td><td>同上（75 行）</td></tr><tr><td>5.10</td><td>产物结构校验（宽松）</td><td><code>[APP]data\poc_skills\poc-*\scripts\validate_*.py</code></td><td><code class="tag">【新增】</code></td><td>—</td></tr><tr><td>5.11</td><td>技能包资产不进产物列表</td><td><code>[APP]services\file_watcher.py</code>（排除 <code>skills/</code>）</td><td><code class="tag">【原有】</code></td><td>—</td></tr><tr><td>5.12</td><td>14 个生成模块的 Python 代码</td><td><code>[QINWEN]server\chat\dorbit_ai\</code>（15 文件 / 1,455 行）</td><td><strong>不移植</strong></td><td>见下</td></tr></tbody></table></div><h3 id="关键实现点-5">关键实现点<a class="anchor" href="#关键实现点-5" aria-label="锚点">#</a></h3><p><strong>为什么不搬生成器代码</strong>：</p><div class="tablewrap"><table><thead><tr><th>事实</th><th>含义</th></tr></thead><tbody><tr><td>那 14 个模块<strong>本身就是在调大模型</strong></td><td>它们是 LLM 调用的一层薄包装，不含业务算法</td></tr><tr><td>SDK 模式下<strong>模型自己就能写出产物文件</strong></td><td>再让模型用 <code>Bash</code> 去调一个「会调大模型的脚本」＝ <strong>套娃</strong></td></tr><tr><td>套娃会<strong>断掉流式链路</strong></td><td>脚本内部的 LLM 调用不经过执行总线，用户在对话里看不到生成过程</td></tr><tr><td>真正有价值的是<strong>产出规范与提示词</strong></td><td>约 1,302 行，<strong>在另一个文件里</strong></td></tr></tbody></table></div><p><strong>所以：不移植代码，只移植产出规范。</strong> 连带消失的旧设计内容：</p><div class="tablewrap"><table><thead><tr><th>旧设计的东西</th><th>现在</th></tr></thead><tbody><tr><td>生成器接口抽象 ＋ 14 个实现</td><td><strong>不需要</strong>——没有 Python 生成器可分派</td></tr><tr><td>LangChain 依赖替换表</td><td><strong>不需要</strong>——不再有 LangChain 调用</td></tr><tr><td>「自动续跑生成」机制</td><td><strong>不需要</strong>——<code>SKILL.md</code> 直接要求模型产出产物文件本身，中间物不存在</td></tr><tr><td>幂等 / 并发保护 / 失败不毁旧版本三条约束</td><td>随「自动续跑」一起消失</td></tr></tbody></table></div><p><strong>校验保持宽松</strong>：只验「是合法 YAML ＋ 顶层键存在 ＋ 内容非空」，<strong>不校验枚举值</strong>（部分 DSL 数字枚举含义未确认，不得猜测）。</p><p><strong>必须剥离代码围栏</strong>：产物 YAML 若带围栏，<strong>画布会渲染成空白</strong>。这条要求写进 <code>SKILL.md</code> 的约束段落，是一期必验项。</p><p><strong>验收</strong>：业务流程阶段跑完后<strong>无需任何额外操作</strong>，工作空间出现产物文件且画布<strong>非空白</strong>；产物不含代码围栏；技能包 <code>references/</code> 资产不出现在产物列表。</p><h2 id="3.6-技能集市-2">3.6 技能集市<a class="anchor" href="#3.6-技能集市-2" aria-label="锚点">#</a></h2><p><strong>本次不涉及。</strong></p><p>六个技能是<strong>项目内置</strong>的，随项目创建自动装配，<strong>不走技能集市的发布 / 审核 / 安装链路</strong>。因此：</p><div class="tablewrap"><table><thead><tr><th>项</th><th>结论</th></tr></thead><tbody><tr><td><code>[APP]services\skill_registry_service.py</code></td><td><code class="tag">【原有】</code> <strong>零改动</strong></td></tr><tr><td><code>[APP]api\skill_registry.py</code></td><td><code class="tag">【原有】</code> <strong>零改动</strong></td></tr><tr><td><code>[UI]views\ap-agent\skill\</code></td><td><code class="tag">【原有】</code> <strong>零改动</strong></td></tr><tr><td>原型里的集市改进（热销/新品角标、真实使用次数代替静态下载数）</td><td><strong>不在本次范围</strong> —— 那是对集市本身的改造，与「六阶段能力」无关，可另开一期</td></tr></tbody></table></div><blockquote><p><strong>一个待确认点</strong>：六个内置技能会出现在前端的项目技能列表里（它们是 <code>harness_myskills</code> 记录）。若希望它们<strong>不可删除</strong>，需要给技能表加一个"内置"标记列；当前设计<strong>不加列</strong>，靠「启动时幂等补装」兜底——用户删掉后下次启动该阶段会自动补回。</p></blockquote><h2 id="3.7-只做接口的部分-2">3.7 只做接口的部分<a class="anchor" href="#3.7-只做接口的部分-2" aria-label="锚点">#</a></h2><p>以下本次<strong>只定义接口与数据模型骨架，不实现功能</strong>。</p><div class="tablewrap"><table><thead><tr><th>#</th><th>模块</th><th>接口路径</th><th>标记</th><th>现状</th></tr></thead><tbody><tr><td>7.1</td><td><strong>分享</strong></td><td><code>GET/POST /api/conversations/{id}/shares</code>、<code>DELETE …/{用户标识}</code>、<code>GET /api/conversations/shares/received</code></td><td><code class="tag">【新增】</code>接口桩</td><td>既有后端<strong>零实现</strong>；前端 <code>ShareDesign.vue</code> 调的是外部平台接口，本后端自建不会与前端打通 → <strong>保持与现状一致</strong></td></tr><tr><td>7.2</td><td><strong>知识库</strong></td><td>接口定义 ＋ 数据模型骨架</td><td><code class="tag">【新增】</code>接口桩</td><td><code>dorbit_ai</code> 已有完整实现（含两种向量后端），本次<strong>不移植</strong>；不引入向量库与嵌入模型</td></tr><tr><td>7.3</td><td><strong>低代码代码生成</strong></td><td><strong>不新增接口</strong></td><td>—</td><td>移植源全仓检索 <code>codegen</code> / <code>zipfile</code> / <code>generate_code</code> / <code>dsl_code</code> <strong>零命中</strong>；能力只在外部平台，调用方全在前端 DML 编辑器，本来就跑得通 → <strong>不纳入后端范围</strong></td></tr></tbody></table></div><h3 id="统一的错误语义">统一的错误语义<a class="anchor" href="#统一的错误语义" aria-label="锚点">#</a></h3><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>未启用：      enabled = false，原因 ＝ 尚未实现
+已启用无数据： enabled = true，列表为空</code></pre></div><p><strong>两者必须可区分。</strong> 不得用「返回空结果」冒充「检索无命中」，否则调用方无法判断是功能没开还是真的没有数据。</p><h3 id="将来实现分享时必须满足">将来实现分享时必须满足<a class="anchor" href="#将来实现分享时必须满足" aria-label="锚点">#</a></h3><ol><li>分享对象来自<strong>真实用户体系</strong>，不得沿用原型里写死的假用户。</li><li>权限级别至少区分只读与可编辑。</li><li>取消分享立即失效。</li><li><strong>统一权限校验入口</strong>：产物读取、阶段执行、上传下载<strong>统一</strong>走它，不得各处散落判断。</li></ol><hr class="rule"><h2 id="附-一期最小闭环-2">附：一期最小闭环<a class="anchor" href="#附-一期最小闭环-2" aria-label="锚点">#</a></h2><div class="codewrap"><div class="codetag">text</div><pre class="code"><code>① 新建一个项目
+     → project_service.create() 建磁盘目录 ＋ 预置文件夹 ＋ 装配六个内置技能
+     → 工作空间出现 skills/poc-*/ 六个目录，项目技能列表出现六条
+
+② GET /api/poc/stages?project_id=…
+     → 六个阶段全部 not_started，② 的 skill_id 已绑定
+
+③ POST /api/poc/stages/2/start
+     → 返回 { conversation_id, skill_id, content }
+
+④ POST /api/conversations/{id}/agent { content, skill_id }        ← 既有接口
+     → system_prompt ＝ 平台规则 ＋ 业务流程阶段方法论
+     → 模型 Read 产出规范 → 写出 YAML 文件
+
+⑤ FileWatcherService 登记产物 ＋ 发 artifact_generated / file_tree_updated
+
+⑥ GET /api/poc/stages?project_id=…
+     → ② 状态变为 done，产物列表出现业务流程地图
+
+⑦ 前端预览区读到该文件 → 用户选 bpmMap 画布 → 渲染成功（非空白）</code></pre></div><p><strong>这条链路跑通即验证了整个架构</strong>，覆盖了内置技能装配、阶段定义、进度推导、Skill 绑定、上下文组装、SDK 执行、文件落地、产物归并、前端契约。</p><h2 id="附-主要风险-2">附：主要风险<a class="anchor" href="#附-主要风险-2" aria-label="锚点">#</a></h2><div class="tablewrap"><table><thead><tr><th>风险</th><th>等级</th><th>对策</th></tr></thead><tbody><tr><td><strong>产物路径不稳定</strong>（模型写错目录）</td><td><span class="conf">⚠️</span> <strong>高</strong></td><td>平台规则已把交付物收敛到 <code>results/</code>，阶段子目录在启动消息里写死；失败表现为「阶段未完成」，<strong>可观测</strong>而非静默</td></tr><tr><td><strong>画布空白</strong>（产物带代码围栏）</td><td><span class="conf">⚠️</span> 中</td><td><code>SKILL.md</code> 约束段落明确要求；校验脚本检查；一期必验</td></tr><tr><td><strong>技能物化静默失败</strong>（<code>skills/</code> 预置夹缺失时只 warning 不报错）</td><td><span class="conf">⚠️</span> 中</td><td>装配器断言目录已生成；顺序上必须在 <code>create_preset_folders</code> 之后</td></tr><tr><td>模型不按 <code>SKILL.md</code> 流程走</td><td><span class="conf">⚠️</span> 中</td><td>平台规则优先级高于技能；技能内容<strong>只追加不替换</strong></td></tr><tr><td>产物超过 1 MB 时预览失败</td><td>低</td><td><code>read_text_content</code> 上限 1 MB；超限时画布报「文件过大」，需在技能里约束产物体量</td></tr><tr><td>内置技能被用户删除</td><td>低</td><td>启动该阶段时<strong>幂等补装</strong>；若要彻底禁止，需给技能表加"内置"列</td></tr><tr><td>DSL 枚举含义未确认</td><td>中</td><td>校验保持宽松，只验顶层结构</td></tr><tr><td><code>yamlUtils.ts</code> 两版不等价</td><td>低</td><td>既有 159 行 vs 来源 214 行，移植前逐函数比对</td></tr><tr><td>⑥ 低代码阶段产物形态未定</td><td>低</td><td>一期不启用</td></tr></tbody></table></div><h2 id="附-可行性核对-对照既有代码逐条验证-2">附：可行性核对（对照既有代码逐条验证）<a class="anchor" href="#附-可行性核对-对照既有代码逐条验证-2" aria-label="锚点">#</a></h2><p>设计里的每条关键假设都已回读源码确认。</p><h3 id="✅-成立"><span class="conf">✅</span> 成立<a class="anchor" href="#✅-成立" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>#</th><th>假设</th><th>核实位置与结果</th></tr></thead><tbody><tr><td>1</td><td><code>/agent</code> 接受 <code>skill_id</code></td><td><code>[APP]schemas\conversation.py</code> 的 <code>DirectChatRequest.skill_id</code> → <code>_agent_chat_sse(..., payload.skill_id, ...)</code> → <code>service.run(skill_id=...)</code></td></tr><tr><td>2</td><td>技能内容注入 system prompt</td><td><code>_resolve_system_prompt</code> 返回 <code>default_prompt + skill_header + skill.md_content</code></td></tr><tr><td>3</td><td><strong>Bash 未被禁用</strong></td><td><code>_DISALLOWED_TOOLS = ["Task", "Skill", "MCP", "Monitor"]</code>；Bash 经 <code>can_use_tool</code> → <code>validate_command</code> → <code>executor.wrap_command</code> 沙箱包装后放行</td></tr><tr><td>4</td><td>技能包脚本可在沙箱执行</td><td>同上；平台提示词也把 Bash 列为可用工具</td></tr><tr><td>5</td><td>模型写的文件会被登记为产物</td><td><code>Write</code> / <code>Edit</code> 的路径直接加入 <code>agent_written_paths</code>；<strong>Bash 走前后 <code>snapshot_paths_with_meta()</code> 做差集</strong>，再 <code>create_artifacts_for()</code> 补建</td></tr><tr><td>6</td><td><code>skills/</code> 不进产物列表</td><td><code>ARTIFACT_EXCLUDED_DIR_NAMES = frozenset({".claude", ".memory", "temp", "skills"})</code></td></tr><tr><td>7</td><td>产物按时间归并保留最新</td><td><code>artifact_service.list_by_conversation()</code>：<code>created_at</code> 升序、后写覆盖先写、<code>run_count</code> 记改写次数</td></tr><tr><td>8</td><td>文件监控覆盖整个项目根且递归</td><td><code>observer.schedule(handler, self._watch_path, recursive=True)</code></td></tr><tr><td>9</td><td><code>.yaml</code> 能取到内容给画布</td><td><code>get_preview_type()</code> 按扩展名兜底返回 <code>text</code>；<code>GET /api/files/{guid}/preview</code> 返回 JSON 含 <code>content</code>；前端 <code>useProjectWorkspaceStore</code> 把 <code>json.content</code> 存进 <code>previewFiles</code></td></tr><tr><td>10</td><td>项目创建已有装配钩子</td><td><code>ProjectService.create()</code> 已调用 <code>folder_service.create_preset_folders(project)</code></td></tr><tr><td>11</td><td><code>skills</code> 是预置文件夹</td><td><code>PRESET_FOLDER_TYPES = {"uploads": "uploads", "my_skill": "skills", "results": "results"}</code></td></tr><tr><td>12</td><td>会话可绑定项目</td><td><code>ConversationCreate.project_id</code> 为<strong>必填</strong></td></tr><tr><td>13</td><td>技能可按项目隔离创建并自动物化</td><td><code>MySkillCreate.project_id</code> 必填；<code>MySkillService.create()</code> 内部调 <code>_materialize_skill_folder()</code>，<strong>已把 <code>SKILL.md</code> 写盘</strong></td></tr><tr><td>14</td><td>装配依赖链无环</td><td><code>ProjectService → PocSkillProvisioner → MySkillService / FolderService</code>，<code>MySkillService</code> 不反向依赖</td></tr></tbody></table></div><h3 id="⚠️-核对后修正的-3-处"><span class="conf">⚠️</span> 核对后修正的（3 处）<a class="anchor" href="#⚠️-核对后修正的-3-处" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>#</th><th>原设计</th><th>问题</th><th>修正</th></tr></thead><tbody><tr><td>1</td><td>产物目录 <code>poc/NN-xxx/</code></td><td>平台 system prompt 强制交付物进 <code>results/</code>，且声明平台规则优先 → 模型很可能不写 <code>poc/</code>，<strong>进度推导整体失效</strong></td><td>改为 <strong><code>results/NN-xxx/</code></strong>，见 2.3</td></tr><tr><td>2</td><td>用既有 <code>add_skill_file</code> 装 <code>references/</code></td><td><code>_create_file_record()</code> <strong>只 <code>db.add(File)</code>，不写磁盘</strong>；建子目录的 <code>_ensure_skill_subfolder</code> 是私有方法 → 本体资产装不进磁盘，① 访谈失效</td><td>给 <code>myskill_service.py</code> <strong>加一个公开方法</strong>（第 5 处改动），见 3.1</td></tr><tr><td>3</td><td>装配器在 <code>create_preset_folders</code> 附近调用</td><td>物化时若找不到 <code>skills</code> 预置夹，<strong>只打 warning 静默返回</strong>：技能表有记录、磁盘没目录</td><td>明确<strong>顺序硬依赖</strong> ＋ 装配器<strong>自己断言</strong>目录已生成</td></tr></tbody></table></div><h3 id="📌-需要留意的既有行为">📌 需要留意的既有行为<a class="anchor" href="#📌-需要留意的既有行为" aria-label="锚点">#</a></h3><div class="tablewrap"><table><thead><tr><th>项</th><th>值</th><th>影响</th></tr></thead><tbody><tr><td><code>md_content</code> 上限</td><td>60,000 字符</td><td><span class="path">SKILL.md</span> 够用；<strong>本体不可内联进 <span class="path">SKILL.md</span></strong>，必须走 <code>references/</code> —— 与上表修正 2 呼应</td></tr><tr><td><code>description</code> 上限</td><td>2,000 字符</td><td>够用</td></tr><tr><td>预览文本上限</td><td>1 MB</td><td>产物超过则画布打不开</td></tr><tr><td>技能目录名唯一化</td><td>同名冲突生成 <code>poc-interview-2</code></td><td><strong>幂等键必须是 <code>(project_id, 技能名)</code></strong>，否则重复装配会堆出 <code>-2</code> <code>-3</code> 目录</td></tr><tr><td>平台提示词第 29 条</td><td>"除非用户明确要求，否则不要装依赖、跑测试、反复验证"</td><td>技能要求跑校验脚本时，<strong>要在阶段启动消息里明确写出</strong>，避免被判为"反复验证"而跳过</td></tr></tbody></table></div>
+  </main>
+</div>
+
+<button class="totop" title="回到顶部" aria-label="回到顶部">↑</button>
+<script>
+(function(){
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var heads = tocLinks.map(function(a){ return document.getElementById(a.dataset.id); }).filter(Boolean);
+  var topBtn = document.querySelector('.totop');
+
+  // 滚动高亮
+  function onScroll(){
+    var y = window.scrollY + 110, cur = null;
+    for (var i=0;i<heads.length;i++){ if (heads[i].offsetTop <= y) cur = heads[i].id; }
+    tocLinks.forEach(function(a){ a.classList.toggle('active', a.dataset.id === cur); });
+    if (topBtn) topBtn.classList.toggle('on', window.scrollY > 500);
+  }
+  var tick = false;
+  window.addEventListener('scroll', function(){
+    if (tick) return; tick = true;
+    requestAnimationFrame(function(){ onScroll(); tick = false; });
+  }, {passive:true});
+  onScroll();
+
+  // 回到顶部
+  if (topBtn) topBtn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+
+  // 目录过滤 + 全文高亮
+  var input = document.getElementById('q');
+  var hint = document.getElementById('hint');
+  var main = document.querySelector('main');
+
+  function clearMarks(root){
+    Array.prototype.slice.call(root.querySelectorAll('mark.hit')).forEach(function(m){
+      var t = document.createTextNode(m.textContent);
+      m.parentNode.replaceChild(t, m);
+    });
+    root.normalize();
+  }
+  function markAll(root, q){
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n){
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        while (p && p !== root){
+          if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || p.nodeName === 'MARK') return NodeFilter.FILTER_REJECT;
+          p = p.parentNode;
+        }
+        return n.nodeValue.toLowerCase().indexOf(q) >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    var targets = [];
+    while (walker.nextNode()) targets.push(walker.currentNode);
+    targets.forEach(function(node){
+      var text = node.nodeValue, lower = text.toLowerCase(), frag = document.createDocumentFragment(), from = 0, at;
+      while ((at = lower.indexOf(q, from)) >= 0){
+        if (at > from) frag.appendChild(document.createTextNode(text.slice(from, at)));
+        var m = document.createElement('mark'); m.className = 'hit'; m.textContent = text.slice(at, at + q.length);
+        frag.appendChild(m);
+        from = at + q.length;
+      }
+      if (from < text.length) frag.appendChild(document.createTextNode(text.slice(from)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    return targets.length;
+  }
+
+  if (input){
+    var timer = null;
+    input.addEventListener('input', function(){
+      clearTimeout(timer);
+      timer = setTimeout(function(){
+        var q = input.value.trim().toLowerCase();
+        clearMarks(main);
+        if (!q){
+          tocLinks.forEach(function(a){ a.classList.remove('hidden'); });
+          hint.textContent = '';
+          return;
+        }
+        // 1) 目录过滤
+        tocLinks.forEach(function(a){
+          a.classList.toggle('hidden', a.textContent.toLowerCase().indexOf(q) < 0);
+        });
+        // 2) 正文高亮
+        var hits = markAll(main, q);
+        hint.textContent = hits ? (hits + ' 处命中') : '无命中';
+      }, 160);
+    });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Escape'){ input.value = ''; input.dispatchEvent(new Event('input')); }
+    });
+  }
+
+  // 键盘：/ 聚焦搜索
+  document.addEventListener('keydown', function(e){
+    if (e.key === '/' && document.activeElement !== input && input){
+      e.preventDefault(); input.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>
