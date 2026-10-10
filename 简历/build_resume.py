@@ -244,22 +244,28 @@ def build(dst, report=False, after_pt=0.0, line=0.95, drop_limit=0,
     if compact:
         from docx.shared import Pt
 
+        # 先按索引取到所有需要调整的段落（后面会删段，索引会失效）
+        title_par = paras[0]
+        headings = [paras[i] for i in (3, 6, 15, 20, 25) if i < len(paras)]
+        plain = [paras[i] for i in (4, 5, 21, 22, 23, 24) if i < len(paras)]
+
         # 1) 主标题：20.5pt -> 18pt，压缩下方留白
-        for r in paras[0].runs:
+        for r in title_par.runs:
             r.font.size = Pt(18)
-        paras[0].paragraph_format.space_after = Pt(0)
-        paras[1].paragraph_format.space_after = Pt(0)
-        paras[2].paragraph_format.space_after = Pt(2)
+        title_par.paragraph_format.space_after = Pt(0)
+        if len(paras) > 2:
+            paras[1].paragraph_format.space_after = Pt(0)
+            paras[2].paragraph_format.space_after = Pt(2)
         # 2) 节标题：11pt -> 10pt，前后间距收紧
-        for i in (3, 6, 15, 20, 25):
-            for r in paras[i].runs:
+        for par in headings:
+            for r in par.runs:
                 r.font.size = Pt(10)
-            paras[i].paragraph_format.space_before = Pt(3)
-            paras[i].paragraph_format.space_after = Pt(1)
+            par.paragraph_format.space_before = Pt(3)
+            par.paragraph_format.space_after = Pt(1)
         # 3) 教育背景 / 技能：收紧行距与段后距
-        for i in (4, 5, 21, 22, 23, 24):
-            paras[i].paragraph_format.space_after = Pt(0)
-            paras[i].paragraph_format.line_spacing = 1.0
+        for par in plain:
+            par.paragraph_format.space_after = Pt(0)
+            par.paragraph_format.line_spacing = 1.0
         # 4) 「自我评价」与正文内容重复，整段移除，把版面让给经历
         if drop_self_eval:
             for p in paras[-2:]:
