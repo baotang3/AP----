@@ -1,0 +1,7 @@
+# Word / Office 临时锁文件
+~$*
+*.tmp
+
+# 简历生成脚本的中间产物与本地备份
+简历/_final_content.txt
+简历/*_备份*.docx
